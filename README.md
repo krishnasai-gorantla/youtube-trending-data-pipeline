@@ -1,126 +1,117 @@
 # YouTube Trending Data Pipeline
 
-A hands-on data engineering learning project exploring how to ingest, organise, catalogue, query, and analyse YouTube Trending Videos data using AWS and SQL.
+A hands-on data engineering portfolio project using Amazon S3, AWS Glue, PySpark, Parquet, and the YouTube Trending Videos dataset. The project explores ingesting regional source files, extracting reference data from JSON, applying schema mappings and data-quality checks, and writing analytics-friendly data to S3.
 
-> **Status:** In progress. This repository documents my own implementation and learning notes while I build the pipeline. Components and results will be updated as they are verified.
-
-## Project goals
-
-- Organise regional CSV source data in Amazon S3.
-- Explore data cataloguing with AWS Glue.
-- Practise data transformation and storage formats such as Parquet.
-- Query data with Amazon Athena and SQL.
-- Document data-quality checks, errors, fixes, and lessons learned.
-- Build a reproducible, portfolio-ready project rather than just following a tutorial.
+> **Status:** The four AWS Glue job scripts have been captured from the AWS Console and added to this repository. Runtime success, output contents, and end-to-end orchestration still need to be documented with verified evidence.
 
 ## Technology stack
 
-- **Amazon S3** — raw data storage
-- **AWS Glue** — crawler and Data Catalog exploration; transformation work planned/in progress
-- **Amazon Athena / SQL** — querying the data (planned until verified end-to-end)
-- **Python** — scripting and automation as the project develops
-- **GitHub** — version control and technical documentation
+- **Amazon S3** — raw and cleansed data storage
+- **AWS Glue / Glue Data Catalog** — ETL jobs, catalog-based input, and data-quality evaluation
+- **PySpark** — CSV/JSON processing, flattening arrays, column selection, and type casting
+- **Parquet + Snappy** — columnar output format and compression
+- **Git / GitHub** — version control and project documentation
+- **Amazon Athena / SQL** — include verified queries here when available
 
-## Data
-
-The source dataset contains regional YouTube Trending Videos CSV files. The working S3 layout uses a region-partitioned structure similar to:
-
-```text
-youtube/
-└── raw_statistics/
-    ├── region=CA/
-    ├── region=DE/
-    ├── region=FR/
-    ├── region=GB/
-    ├── region=IN/
-    ├── region=JP/
-    ├── region=KR/
-    ├── region=MX/
-    ├── region=RU/
-    └── region=US/
-```
-
-The raw CSV data is not committed to this repository. This keeps the repository focused on code and documentation and avoids unnecessarily committing large data files.
-
-## Architecture
-
-Current learning workflow:
-
-1. Obtain regional CSV files.
-2. Store raw files in Amazon S3.
-3. Run an AWS Glue crawler to discover the data schema.
-4. Resolve catalog and permissions issues.
-5. Add transformation and query steps as they are implemented and tested.
-6. Record validation results and lessons learned.
-
-The diagram below is a high-level target workflow, not a claim that every stage is complete:
+## Data flow represented by the captured scripts
 
 ```text
-Regional CSV files
-       |
-       v
-Amazon S3 (raw zone)
-       |
-       v
-AWS Glue crawler / Data Catalog
-       |
-       v
-Transformation layer (planned)
-       |
-       v
-Amazon Athena + SQL (planned)
-       |
-       v
-Analysis / reporting (planned)
+Regional YouTube CSV files
+  s3://de-youtube-raw-useast1-krishna-2026/youtube/raw_statistics/*/*.csv
+                 |
+                 v
+        Glue job: spark
+        - read CSV with header/schema inference
+        - extract region from source file path
+        - append Snappy Parquet
+                 |
+                 v
+  s3://de-on-youtube-cleansed-useast1-s3/youtube/
+
+Reference JSON files
+  s3://de-youtube-raw-useast1-krishna-2026/youtube/raw_statistics_reference_data/*.json
+                 |
+                 v
+ Glue job: de-youtube-reference-explode-job
+ - explode items array
+ - select and rename reference fields
+ - cast id to bigint
+                 |
+                 v
+  s3://de-on-youtube-cleansed-useast1-s3/statistics_reference_data/
+                 |
+                 v
+ Glue job: de-youtube-raw-to-cleansed-glue-job
+ - read raw_statistics from Glue Data Catalog
+ - map 17 columns to explicit types
+ - evaluate ColumnCount > 0
+ - write Snappy Parquet to cleansed S3 path
 ```
 
-## Current progress
+The diagram summarizes code paths, not a verified execution order or proof that every job succeeded. The statistics reference-data job also reads catalog data and the cleansed Parquet path, then calls a flatten transform; its captured script does not currently write an output. Review its visual-job configuration and dependency before treating it as a completed pipeline stage.
 
-- [x] Created an S3 bucket and uploaded regional CSV files.
-- [x] Created an AWS Glue IAM role and crawler.
-- [x] Ran the crawler; the latest observed crawler status was `SUCCEEDED`.
-- [ ] Confirm that the expected table appears in the Glue Data Catalog.
-- [ ] Resolve the observed S3 `GetObject` permission issue affecting Glue.
-- [ ] Implement and validate transformations.
-- [ ] Run documented Athena queries and data-quality checks.
-- [ ] Add reproducible code and screenshots/diagrams where appropriate.
+## Captured Glue jobs
 
-I will only mark a step complete once I have verified it in my own environment.
+| Script | Purpose visible in code | Important implementation detail |
+|---|---|---|
+| [`spark.py`](src/glue/spark.py) | Reads regional CSVs, extracts `region` from the source path, writes Parquet | Uses append mode; reruns may append duplicate records unless controlled |
+| [`de-youtube-reference-explode-job.py`](src/glue/de-youtube-reference-explode-job.py) | Explodes JSON `items`, selects reference fields, writes Parquet | Uses overwrite mode at the reference-data output path |
+| [`de-youtube-raw-to-cleansed-glue-job.py`](src/glue/de-youtube-raw-to-cleansed-glue-job.py) | Reads catalog table `de-youtube-raw.raw_statistics`, maps 17 fields, evaluates a basic data-quality rule, writes Parquet | Rule `ColumnCount > 0` checks that the frame has columns; it does not validate every row or field |
+| [`de-youtube-statistics-reference-data-job.py`](src/glue/de-youtube-statistics-reference-data-job.py) | Reads reference data from the catalog and a Parquet path; applies `gs_flatten(maxLevels=0)` to the catalog DynamicFrame | Captured code does not use the Parquet frame in the flatten call or write an output; investigate configuration and dependency |
 
 ## Repository structure
 
 ```text
 .
-├── docs/          # Architecture and setup notes
-├── notes/         # Progress log, errors, and lessons learned
-├── sql/           # Athena / SQL queries
-├── src/           # Python scripts and transformation code
+├── docs/
+│   └── architecture.md
+├── notes/
+│   └── progress-log.md
+├── sql/
+│   └── README.md
+├── src/
+│   ├── glue/
+│   │   ├── spark.py
+│   │   ├── de-youtube-reference-explode-job.py
+│   │   ├── de-youtube-raw-to-cleansed-glue-job.py
+│   │   └── de-youtube-statistics-reference-data-job.py
+│   └── README.md
 ├── .gitignore
 └── README.md
 ```
 
+## Verification checklist
+
+- [x] Regional CSVs uploaded to the raw S3 bucket (reported during project work).
+- [x] Four Glue job scripts captured from the AWS Console and committed here.
+- [ ] Verify the Glue job run status and review logs for each job.
+- [ ] Verify expected Parquet objects and schemas in the cleansed S3 paths.
+- [ ] Confirm Glue Catalog tables and partitions match the actual files.
+- [ ] Inspect the reference-data visual job and the `gs_flatten` dependency.
+- [ ] Check whether rerunning append-mode CSV processing duplicates records.
+- [ ] Add tested Athena SQL and record sample results/row counts.
+- [ ] Add a final end-to-end run record and cite the original tutorial and dataset source.
+
+Do not mark a checkbox complete until you have verified it in your AWS environment.
+
 ## Security and data handling
 
 - Never commit AWS access keys, secret keys, passwords, session tokens, or `.env` files.
-- Do not commit private account details, personal data, or sensitive logs.
-- Keep large raw datasets outside Git unless there is a clear, safe reason to include a small sample.
-- Use IAM roles and least-privilege permissions where possible.
-- Redact account IDs, resource details, and credentials from screenshots and logs before publishing.
+- The scripts contain S3 bucket names and paths. These are not credentials, but review whether you want to expose resource naming in a public portfolio.
+- Keep raw CSV/JSON datasets and generated Parquet files out of Git unless there is a clear, safe reason to include a small sample.
+- Do not commit private account details, personal data, or unredacted logs/screenshots.
+- Prefer IAM roles and least-privilege permissions.
 
-## Learning log
+## Learning outcomes demonstrated by the code
 
-For each meaningful step, I aim to record:
-
-- What I was trying to do
-- What I expected to happen
-- What actually happened
-- The error or data-quality issue
-- The root cause and fix (once confirmed)
-- What I learned and how I verified the result
+- Reading CSV and multiline JSON from S3 with Spark
+- Extracting metadata from input file paths
+- Exploding nested arrays and selecting nested JSON fields
+- Applying explicit Glue schema mappings
+- Writing Parquet with Snappy compression
+- Using Glue Data Catalog inputs and a data-quality evaluation rule
+- Understanding idempotency implications of append versus overwrite modes
 
 ## Acknowledgements
 
-This is a personal learning project based on a guided data engineering tutorial and my own practice. I will credit the original tutorial and dataset source here once I add their exact titles and links.
-
----
-*Work in progress — documentation will evolve as the implementation is tested.*
+Add the exact tutorial title/link and dataset source/licence here before presenting this as a finished public portfolio project.
