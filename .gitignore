@@ -218,3 +218,27 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project datasets and generated outputs
+ data/
+datasets/
+*.csv
+*.parquet
+*.jsonl
+output/
+outputs/
+tmp/
+temp/
+
+# Credentials and private keys
+*.pem
+*.key
+.aws/
+credentials
+credentials.*
+.env.*
+!.env.example
+
+# OS and IDE files
+.DS_Store
+.idea/
