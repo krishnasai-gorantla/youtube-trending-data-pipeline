@@ -104,6 +104,8 @@ The reference table contained 311 rows and 32 distinct category IDs. A direct jo
 - Deduplicated lookup query ID: `4946a41d-80c0-435f-b0ef-f8b523134400`.
 - Reference row/ID count query ID: `a46a78c6-e792-4cf8-9dd2-2d9efd9fcd4e`.
 
+The revised category-performance query executed successfully and returned 99 region/category rows after deduplicating the reference lookup, removing exact duplicate records, excluding conflicting business keys and filtering the literal `#NAME?` IDs. Query execution ID: `2ee40cd5-aa84-4d28-8b9d-57c613765327`.
+
 The category labels appeared consistent across the inspected regional copies. If localized category names are required, preserve the region key instead of selecting an arbitrary label.
 
 ## Earlier Athena count query
