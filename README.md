@@ -2,7 +2,7 @@
 
 A portfolio project exploring batch data engineering on AWS using the Kaggle YouTube Trending Videos dataset. The repository preserves the Glue scripts captured from the AWS environment and documents the verified state of the pipeline, its known defects, and the recovery plan.
 
-> **Current state:** Historical S3 outputs and Athena tables exist, but the pipeline is not yet fully reproducible end to end. One Glue job has a confirmed CSV parsing failure, one has a prior IAM write failure, and one reference-data job needs its output behaviour clarified. See [the AWS verification record](docs/verified-aws-state.md).
+> **Current state:** A successful staging-validation path exists and has been queried in Athena, but the dataset still contains formula-error video IDs and duplicate business keys. The original raw-to-cleansed job has parsing failures and overlaps the CSV job's output prefix. See [the AWS verification record](docs/verified-aws-state.md).
 
 ## Project goals
 
@@ -40,7 +40,7 @@ Kaggle YouTube Trending CSVs + category JSON
        SQL analysis / BI-ready outputs
 ```
 
-This diagram describes the intended flow from the scripts and AWS resources inspected so far. It does **not** imply that all jobs are orchestrated, that every job currently succeeds, or that a QuickSight dashboard is part of this repository.
+This diagram describes the intended flow from the scripts and AWS resources inspected. It does **not** imply that all jobs are orchestrated, that every job currently succeeds, or that a QuickSight dashboard is part of this repository.
 
 ## AWS services and tools
 
@@ -50,6 +50,7 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 | AWS Glue Crawlers | Discover schemas and update catalog tables |
 | AWS Glue Data Catalog | Stores table metadata for ETL and Athena |
 | AWS Glue / PySpark | Performs batch transformations |
+| AWS Lambda | One active JSON/reference-data function exists; its code is not yet captured here |
 | Amazon Athena | Runs SQL directly against S3-backed tables |
 | GitHub | Stores scripts, SQL, documentation and validation checks |
 
@@ -63,6 +64,7 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 ├── scripts/                 # Local repository validation
 ├── sql/                     # Athena validation and analysis queries
 ├── src/glue/                # Captured AWS Glue scripts
+├── src/lambda/              # Lambda capture notes
 └── tests/                   # Lightweight repository tests
 ```
 
@@ -72,21 +74,21 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 |---|---|---|
 | `src/glue/spark.py` | Reads regional CSVs, derives region from the S3 path, writes Snappy Parquet | Writes in append mode; repeated runs can duplicate data |
 | `src/glue/de-youtube-reference-explode-job.py` | Explodes JSON `items`, selects category fields, writes Parquet | Uses overwrite mode; reruns replace the target prefix |
-| `src/glue/de-youtube-raw-to-cleansed-glue-job.py` | Reads the raw catalog table, applies mappings and a basic data-quality ruleset, writes Parquet | Historical runs failed parsing MX/KR CSVs; output path overlaps the CSV job |
+| `src/glue/de-youtube-raw-to-cleansed-glue-job.py` | Reads the raw catalog table, applies mappings and a basic data-quality ruleset, writes Parquet | Historical runs failed parsing MX/KR CSV files; output path overlaps the CSV job |
 | `src/glue/de-youtube-statistics-reference-data-job.py` | Reads catalog and Parquet DynamicFrames and applies `gs_flatten` to the catalog frame | Captured code does not use the Parquet frame in the flatten operation or write a result |
+| `src/glue/youtube-tutorial-staging-validation.py` | Reads CSVs using ISO-8859-1 and an explicit schema; writes partitioned staging Parquet | Successful baseline, but formula-error IDs and duplicate keys remain |
 
-The scripts are retained as evidence of the implementation that was present in AWS. They should not be treated as production-ready simply because they are in version control.
+## Verified data snapshot
 
-## Verification
+Athena checks on the staging table returned **375,942 rows across 10 regions**. They also found:
 
-The last recorded AWS inspection found:
+- 2,312 literal `#NAME?` values in `video_id`.
+- 12,703 duplicate business-key groups with 13,045 extra rows among valid IDs.
+- 12,386 extra rows were exact duplicates; 659 were conflicting duplicates across 649 keys.
+- No blank video IDs, blank regions or negative views/likes/dislikes/comment counts were found.
+- The reference table contains 311 rows but only 32 distinct category IDs. A direct category join multiplies rows unless the reference table is deduplicated.
 
-- Athena successfully counted **375,942 rows** in `db_youtube_cleaned.youtube`.
-- Athena successfully counted **311 rows** in `db_youtube_cleaned.statistics_reference_data`.
-- The two S3 prefixes contained 10 Parquet objects under `youtube/` and 4 under `statistics_reference_data/`.
-- The Glue run history included successful runs as well as the failures described in [the verification record](docs/verified-aws-state.md).
-
-These are historical observations, not a guarantee that the resources still have the same state. Re-run the SQL in `sql/01_table_validation.sql` before relying on the counts.
+These are verified observations from Athena, not a claim that the data is already clean. See [verified-aws-state.md](docs/verified-aws-state.md) for the query execution IDs and detailed findings.
 
 ## Run local checks
 
@@ -94,14 +96,14 @@ The Glue scripts require the AWS Glue runtime and cannot be executed as ordinary
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 -m compileall -q src/glue scripts tests
+python3 -m compileall -q src/glue tests
 ```
 
 ## Safety and reproducibility
 
 - Do not rerun the append-mode job against the existing `youtube/` prefix until the duplicate-handling strategy is confirmed.
 - Do not overwrite the current S3 datasets during recovery. Test new transformations in a separate versioned prefix first.
-- Do not broaden IAM permissions just to make a job pass. Identify the exact bucket/prefix and grant only the required actions.
+- Do not broaden IAM policies just to make a job pass. Identify the exact bucket/prefix and grant only the required actions.
 - Keep credentials, `.env` files, raw datasets, generated Parquet, and unredacted logs out of Git.
 - The AWS resource names in the captured scripts are environment-specific. Replace them with configuration parameters before sharing a reusable deployment.
 - A successful syntax check does not prove that an AWS Glue job will run successfully.
