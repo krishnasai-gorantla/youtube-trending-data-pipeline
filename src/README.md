@@ -1,22 +1,23 @@
-# Glue Source Code
+# Source Code
 
-This directory contains the four AWS Glue job scripts copied from the AWS Console for documentation and version control.
+## AWS Glue jobs
 
-| File | Purpose visible in the script |
-|---|---|
-| `spark.py` | Reads regional YouTube CSVs from S3, derives a `region` column from the source path, writes Snappy Parquet in append mode. |
-| `de-youtube-reference-explode-job.py` | Reads multiline JSON reference data, explodes `items`, selects six fields, and writes Snappy Parquet in overwrite mode. |
-| `de-youtube-raw-to-cleansed-glue-job.py` | Reads the `raw_statistics` Glue Catalog table, maps field types, evaluates `ColumnCount > 0`, and writes Snappy Parquet. |
-| `de-youtube-statistics-reference-data-job.py` | Reads a reference-data catalog table and Parquet path, applies `gs_flatten` to the catalog frame, then commits. Its output behavior and dependency should be investigated. |
+| File | Role | Observed status / notes |
+|---|---|---|
+| `glue/spark.py` | Reads regional CSVs and appends Parquet to the main cleansed prefix | One successful run observed; a prior run failed on missing S3 `PutObject` permission |
+| `glue/de-youtube-reference-explode-job.py` | Explodes category JSON reference data to Parquet | Successful run observed |
+| `glue/de-youtube-raw-to-cleansed-glue-job.py` | Reads raw CSV catalog table, applies mappings and writes Parquet | Historical runs failed parsing MX/KR CSV files; writes to same prefix as `spark.py` |
+| `glue/de-youtube-statistics-reference-data-job.py` | Applies Glue Studio `gs_flatten` transform to catalog DynamicFrame | A successful run observed after supplying `gs_flatten.py`; captured script has no output/write step |
+| `glue/youtube-tutorial-staging-validation.py` | Reads CSVs with explicit schema and ISO-8859-1 encoding; validates minimum row count and 10 regions; writes partitioned staging Parquet | Successful run observed on 17 October 2026; Athena subsequently confirmed 375,942 rows across 10 regions |
 
-## Running the jobs
+The staging-validation script is copied from the successful AWS Glue job. It is retained as an observed implementation, not yet a complete data-quality solution: it counts malformed rows and missing IDs but does not fail/quarantine those records, and it drops the corrupt-record column before writing.
 
-These are AWS Glue scripts, not standalone local Python programs. They depend on the AWS Glue runtime, IAM permissions, catalog resources, S3 paths, and (for the statistics reference-data job) the `gs_flatten` module. Do not run them locally as ordinary Python scripts and do not execute them in production without reviewing the job configuration and write modes.
+## Lambda
 
-## Before calling the pipeline verified
+The AWS environment also contains one active Lambda function, `de-youtube-raw-useast1-lambda-json-sheet`. Its deployment package has not yet been captured in this repository. See [lambda/README.md](lambda/README.md).
 
-- Confirm each job's successful run in AWS Glue.
-- Confirm output S3 objects, schema, row counts, and sample records.
-- Review append/overwrite behavior and rerun safety.
-- Verify any custom module and job dependencies.
-- Record tested Athena queries and results.
+## Runtime requirements
+
+These are AWS Glue scripts, not standalone local Python programs. They require the AWS Glue runtime, configured IAM roles, catalog resources and S3 paths. The reference-data job additionally requires the Glue Studio `gs_flatten` dependency supplied through `--extra-py-files`.
+
+Do not rerun append-mode jobs against existing prefixes or overwrite existing datasets during recovery. Use a new test prefix and compare results first.
