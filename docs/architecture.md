@@ -43,7 +43,7 @@ The job:
 
 This job succeeded on 17 October 2026. Athena later confirmed 375,942 rows across 10 regions in `db_youtube_cleaned.tutorial_staging_youtube`.
 
-**Important limitation:** the script counts malformed rows and missing video IDs, but does not enforce a threshold for either; it drops `_corrupt_record` before writing. Athena found 2,312 literal `#NAME?` video IDs in the staged table. The staging job is the best current baseline, but it still needs a quarantine/rejection policy.
+**Important limitation:** the script counts malformed rows and blank video IDs, but does not enforce a threshold for either; it drops `_corrupt_record` before writing. Its CloudWatch output reported zero malformed rows and zero blank IDs, but Athena found 2,312 literal `#NAME?` video IDs, which are non-blank and therefore passed that check. The staging job is the best current baseline, but it still needs a quarantine/rejection policy.
 
 ## 4. Category reference JSON transformation
 
