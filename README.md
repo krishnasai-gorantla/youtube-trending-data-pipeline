@@ -88,7 +88,7 @@ Athena checks on the staging table returned **375,942 rows across 10 regions**. 
 - No blank video IDs, blank regions or negative views/likes/dislikes/comment counts were found.
 - The reference table contains 311 rows but only 32 distinct category IDs. A direct category join multiplies rows unless the reference table is deduplicated.
 
-These are verified observations from Athena, not a claim that the data is already clean. See [verified-aws-state.md](docs/verified-aws-state.md) for the query execution IDs and detailed findings.
+These are verified observations from Athena, not a claim that the data is already clean. The revised category-performance query executed successfully and returned 99 region/category result rows after filtering invalid IDs, removing exact duplicates and excluding conflicting keys. See [verified-aws-state.md](docs/verified-aws-state.md) for query execution IDs and detailed findings.
 
 ## Run local checks
 
