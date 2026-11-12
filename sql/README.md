@@ -2,7 +2,9 @@
 
 Run these queries in the Athena workgroup configured for the project. They assume the Glue Data Catalog database `db_youtube_cleaned`.
 
-- `01_table_validation.sql` — row counts for the two core datasets. This query was previously executed successfully; the recorded results were 375,942 and 311 rows respectively. Re-run it to refresh the counts.
-- `02_category_performance.sql` — category-level descriptive analysis using the `youtube` and `statistics_reference_data` tables. This query is provided for validation and analysis; it has not yet been recorded as executed.
+- `01_table_validation.sql` — row counts for the main and staging datasets. The query was executed successfully on 12 November 2026.
+- `02_category_performance.sql` — category analysis using the staging dataset. It deduplicates the reference lookup, removes exact duplicate rows, excludes conflicting business keys and filters the literal `#NAME?` IDs. It is a proposed analysis query and should be run after review.
+- `03_duplicate_audit.sql` — measures exact and conflicting duplicate business keys. Executed successfully on 12 November 2026.
+- `04_staging_quality.sql` — reports row quality metrics and region distribution. The corresponding quality checks were executed successfully on 12 November 2026.
 
 Do not describe an unexecuted query as tested. Record the execution date, workgroup, query execution ID, and result summary when validating additional SQL.
