@@ -7,11 +7,14 @@ This file records evidence gathered from the connected AWS environment. Treat it
 The read-only inventory in `us-east-1` found:
 
 - 5 S3 buckets, including the raw and cleansed YouTube buckets.
-- 5 Glue jobs and 6 Glue crawlers.
+- 6 Glue jobs and 6 Glue crawlers.
 - 1 active Lambda function: `de-youtube-raw-useast1-lambda-json-sheet` (Python 3.12, handler `index.lambda_handler`).
 - 0 Step Functions state machines.
+- No S3 bucket notifications were configured on the raw bucket, no Lambda event-source mappings were found for the JSON/reference-data function, and the function has no resource-based policy.
+- The Lambda environment points at `s3://de-on-youtube-cleansed-useast1-s3/youtube` with `write_data_operation=append`; leave it untouched until its code and intended invocation path are reviewed.
+- The account is not subscribed to Amazon QuickSight. Dashboard/analysis listing returned `UnsupportedUserEditionException`; the dataset listing returned zero datasets.
 
-The Lambda deployment package is not yet captured in this repository. No Step Functions orchestration was found in this region during the inspection. QuickSight resources were not audited, so no claim is made about dashboards.
+The Lambda deployment package is not yet captured in this repository. No Step Functions orchestration was found in this region during the inspection. A QuickSight dashboard has not been deployed.
 
 ## Glue job run history inspected
 
@@ -24,6 +27,7 @@ The Glue API inspection returned the following evidence:
 | `de-youtube-statistics-reference-data-job` | Latest returned run: SUCCEEDED (8 Sep 2026) | An earlier run failed with `ModuleNotFoundError: gs_flatten`; current job arguments include `gs_flatten.py` via `--extra-py-files` |
 | `de-youtube-raw-to-cleansed-glue-job` | Latest returned runs: FAILED (8 Sep 2026) | Errors identify `MXvideos.csv` and `KRvideos.csv` as files that could not be parsed |
 | `youtube-tutorial-staging-validation` | SUCCEEDED (17 Oct 2026) | Uses explicit schema and ISO-8859-1 encoding; writes partitioned Parquet to a separate staging prefix |
+| `youtube-portfolio-curation-v2` | SUCCEEDED (12 Nov 2026) | 216 seconds, 433 DPU-seconds; writes safe and quarantine Parquet to a new isolated prefix |
 
 The API request for most jobs was limited to the latest five returned records. This is not a complete historical audit.
 
@@ -35,6 +39,8 @@ The inspection found these objects under the cleansed bucket:
 |---|---:|
 | `s3://de-on-youtube-cleansed-useast1-s3/youtube/` | 10 Parquet objects |
 | `s3://de-on-youtube-cleansed-useast1-s3/statistics_reference_data/` | 4 Parquet objects |
+| `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_portfolio_v2/safe/` | Partitioned Snappy Parquet, 10 regions |
+| `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_portfolio_v2/quarantine/` | Partitioned Snappy Parquet, invalid and conflicting rows |
 
 The staging job writes to `s3://de-on-youtube-cleansed-useast1-s3/staging/tutorial_compat/youtube/`. Object presence confirms that files exist; it does not independently prove their correctness, freshness, uniqueness, or completeness.
 
@@ -113,6 +119,46 @@ The revised category-performance query executed successfully and returned 99 reg
 
 A follow-up query found no category IDs with more than one distinct title across the regional copies (query ID `0c3620b4-aa82-4673-a67e-11408fa8f216`). If localized category names are required in a future dataset, preserve the region key rather than collapsing by ID.
 
+## Curated dataset v2 — successful Glue run
+
+The new `youtube-portfolio-curation-v2` job read `db_youtube_cleaned.tutorial_staging_youtube` and wrote only to the new `curated/youtube_portfolio_v2/` prefix. It did not modify the raw or staging data, existing Glue jobs, or existing tables.
+
+- Glue run ID: `jr_905767603af8b4b55f6361a6c0634f7c11705508674bf956d09eeb2045365263`
+- State: SUCCEEDED; execution time 216 seconds; 433 DPU-seconds.
+- Safe table: `db_youtube_cleaned.youtube_portfolio_v2`
+- Quarantine table: `db_youtube_cleaned.youtube_portfolio_v2_quarantine`
+- Both tables were registered in the Glue Data Catalog and their region partitions repaired with Athena `MSCK REPAIR TABLE`.
+
+Athena independently verified:
+
+| Check | Result |
+|---|---:|
+| Safe rows | 359,936 |
+| Distinct regions | 10 |
+| Invalid IDs in safe table | 0 |
+| Duplicate business-key groups in safe table | 0 |
+| Invalid video IDs quarantined | 2,312 |
+| Conflicting rows quarantined | 1,298 |
+| Conflicting business-key groups | 649 |
+
+The 1,298 conflicting rows represent variants associated with 649 business-key groups; the pipeline quarantines all variants rather than selecting an arbitrary winner.
+
+- Safe row/region/invalid-ID query ID: `2c10828f-e06f-4ec9-a9c9-1904335de85c`
+- Duplicate-key validation query ID: `d203a273-1512-4af1-9286-6f19fd0f9f6e`
+- Quarantine breakdown query ID: `14c3e695-bfdb-464b-9581-16ae67a6f92f`
+- Region distribution query ID: `78254065-834a-4702-bdcf-8accc12176e4`
+- Safe-table partition repair query ID: `27c63162-036d-420d-8d4b-1f409803220f`
+- Quarantine-table partition repair query ID: `5818c4e9-f8ae-421b-ae9e-cde9ee8e6049`
+
+### BI query verification
+
+Three additional dashboard queries executed successfully against the curated table:
+
+- Regional KPIs: `26f0f7ac-218a-4e7e-bf44-8401e5813612`
+- Regional category performance: `d85900bd-bbf4-4a88-8c46-c641780ddb91`
+- Top videos: `1bf09354-dd09-4a79-9f53-8ae0ecd43498`
+
+The queries are committed under `sql/06` through `sql/08`. Their metric definitions and BI deployment limitation are documented in `docs/dashboard-data-model.md`.
 ## Earlier Athena count query
 
 An earlier successful query returned 375,942 rows in `db_youtube_cleaned.youtube` and 311 rows in `db_youtube_cleaned.statistics_reference_data`.
@@ -121,13 +167,12 @@ Query execution ID: `19ad23fd-b42e-4b92-9e50-198954d261ad`.
 
 ## Catalog observations
 
-The cleaned database `db_youtube_cleaned` contained six tables during inspection, including `youtube`, `tutorial_staging_youtube`, `statistics_reference_data`, `youtube_analytics`, `youtube_curated`, and a table named `cleaned_statistics_reference_data`. The last table's location was under the `youtube/` prefix and should be checked before use.
+The cleaned database `db_youtube_cleaned` contained eight tables after curation, including the original tables plus `youtube_portfolio_v2` and `youtube_portfolio_v2_quarantine`. The `cleaned_statistics_reference_data` table's location was under the `youtube/` prefix and should be checked before use.
 
 ## Safe next verification steps
 
-1. Add a data-quality gate for literal `#NAME?` video IDs; the staging CloudWatch log was inspected and reported zero malformed CSV rows.
-2. Quarantine `#NAME?` IDs and malformed CSV rows rather than silently dropping the corrupt-record marker.
-3. Remove exact duplicate rows and quarantine the 649 conflicting business keys for reconciliation.
-4. Deduplicate category reference data by ID (or retain region for localized labels).
-5. Confirm every Glue Catalog table's S3 location and schema.
-6. Re-run Athena checks after each isolated transformation and compare counts before promotion.
+1. Capture and review the existing Lambda deployment package before changing its append-mode behavior or invocation path.
+2. Decide whether to create a Step Functions workflow; none currently exists, and the existing staging/curation jobs intentionally use fixed, non-overwriting output prefixes.
+3. Subscribe to QuickSight only if the account owner approves the service and any associated charges; otherwise use the validated Athena queries with Power BI or another BI tool.
+4. Investigate the observed mojibake in some text fields (for example, `GarcÃ­a`) in a separate encoding-correction transformation. Do not alter the validated numeric dataset in place.
+5. Review the 649 conflicting business keys and establish a documented reconciliation rule before promoting any quarantined variants.
