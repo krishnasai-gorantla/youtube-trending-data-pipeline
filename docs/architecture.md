@@ -81,7 +81,7 @@ The cleaned database `db_youtube_cleaned` includes `youtube`, `tutorial_staging_
 - 375,942 rows across 10 regions.
 - Zero blank video IDs, zero blank regions and zero negative values in views, likes, dislikes or comment counts.
 - 2,312 rows where `video_id = '#NAME?'`.
-- 12,703 duplicate business-key groups (`region, video_id, trending_date`) with 13,045 extra rows among otherwise valid IDs. Of those extras, 12,386 were exact duplicate rows and 659 were conflicting rows across 649 keys.
+- 12,703 duplicate business-key groups (`region, video_id, trending_date`) with 13,045 extra rows among otherwise valid IDs. A full-column `SELECT DISTINCT` audit found 12,396 exact duplicate extra rows and 649 conflicting variants across 649 keys. After exact deduplication and excluding conflicting keys, 359,936 rows remain as a conservative analytics subset.
 - 311 reference rows but only 32 distinct category IDs. A direct join on category ID inflated the row count from 375,942 to 3,734,265. A deduplicated category lookup restores a one-row-per-video-observation join.
 
 These results show why row counts and non-null checks alone are insufficient. See [verified-aws-state.md](verified-aws-state.md) and the Athena SQL files for query IDs and reproducible checks.
