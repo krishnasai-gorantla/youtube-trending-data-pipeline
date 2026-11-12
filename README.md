@@ -31,9 +31,19 @@ Kaggle YouTube Trending CSVs + category JSON
     transformation    explode/flatten
             |            |
             v            v
-        Amazon S3 - cleansed Parquet
+        Amazon S3 - staging Parquet
                     |
           Glue Data Catalog
+                    |
+       Glue 5.1 curation + quality checks
+                    |
+          /                 \
+         v                   v
+    Safe curated          Quarantine
+    Parquet output        Parquet output
+          \                 /
+           v               v
+         Glue Data Catalog
                     |
               Amazon Athena
                     |
@@ -76,7 +86,8 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 | `src/glue/de-youtube-reference-explode-job.py` | Explodes JSON `items`, selects category fields, writes Parquet | Uses overwrite mode; reruns replace the target prefix |
 | `src/glue/de-youtube-raw-to-cleansed-glue-job.py` | Reads the raw catalog table, applies mappings and a basic data-quality ruleset, writes Parquet | Historical runs failed parsing MX/KR CSV files; output path overlaps the CSV job |
 | `src/glue/de-youtube-statistics-reference-data-job.py` | Reads catalog and Parquet DynamicFrames and applies `gs_flatten` to the catalog frame | Captured code does not use the Parquet frame in the flatten operation or write a result |
-| `src/glue/youtube-tutorial-staging-validation.py` | Reads CSVs using ISO-8859-1 and an explicit schema; writes partitioned staging Parquet | Preserved as the tutorial-compatible staging layer; not the final analytics table |\n| `src/glue/youtube-portfolio-curation-v2.py` | Reads the staging Catalog table, rejects invalid IDs, removes exact duplicates, quarantines conflicting business keys, and writes safe/quarantine Parquet | Successful Glue 5.1 run; outputs are isolated under `curated/youtube_portfolio_v2/` |
+| `src/glue/youtube-tutorial-staging-validation.py` | Reads CSVs using ISO-8859-1 and an explicit schema; writes partitioned staging Parquet | Preserved as the tutorial-compatible staging layer; not the final analytics table |
+| `src/glue/youtube-portfolio-curation-v2.py` | Reads the staging Catalog table, rejects invalid IDs, removes exact duplicates, quarantines conflicting business keys, and writes safe/quarantine Parquet | Successful Glue 5.1 run; outputs are isolated under `curated/youtube_portfolio_v2/` |
 
 ## Verified data snapshot
 
