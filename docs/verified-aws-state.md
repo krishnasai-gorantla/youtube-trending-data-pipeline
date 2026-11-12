@@ -92,11 +92,12 @@ The business key was defined as `region + video_id + trending_date`, excluding b
 |---|---:|
 | Duplicate key groups | 12,703 |
 | Extra rows beyond one per key | 13,045 |
-| Exact duplicate extra rows | 12,386 |
-| Conflicting duplicate extra rows | 659 |
+| Exact duplicate extra rows (full-column distinct) | 12,396 |
+| Conflicting distinct variants beyond one per key | 649 |
 | Keys with conflicting rows | 649 |
+| Rows retained after exact deduplication and excluding conflicting keys | 359,936 |
 
-Query execution ID: `57b0bd72-f6b8-4392-911a-69d56b68a71c`.
+An improved audit using `SELECT DISTINCT` across every source column (rather than concatenated signatures) confirmed the counts above. Query execution ID: `0a17a220-591c-4152-87f5-22e2126e359d`.
 
 This means the staging output is a useful baseline, but not a clean final fact table. Exact duplicates can be removed safely; conflicting duplicate keys require an explicit reconciliation rule or quarantine.
 
