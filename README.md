@@ -2,7 +2,7 @@
 
 A portfolio project exploring batch data engineering on AWS using the Kaggle YouTube Trending Videos dataset. The repository preserves the Glue scripts captured from the AWS environment and documents the verified state of the pipeline, its known defects, and the recovery plan.
 
-> **Current state:** A successful staging-validation path exists and has been queried in Athena, but the dataset still contains formula-error video IDs and duplicate business keys. The original raw-to-cleansed job has parsing failures and overlaps the CSV job's output prefix. See [the AWS verification record](docs/verified-aws-state.md).
+> **Current state:** The original staging table is preserved. A separate Glue 5.1 curation job has now succeeded, publishing 359,936 validated rows to a new versioned Parquet prefix and retaining invalid/conflicting rows in quarantine. Both outputs are registered in the Glue Data Catalog and verified with Athena. See [the curation runbook](docs/curated-dataset-v2.md) and [the AWS verification record](docs/verified-aws-state.md).
 
 ## Project goals
 
@@ -49,7 +49,7 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 | Amazon S3 | Stores raw CSV/JSON and transformed Parquet |
 | AWS Glue Crawlers | Discover schemas and update catalog tables |
 | AWS Glue Data Catalog | Stores table metadata for ETL and Athena |
-| AWS Glue / PySpark | Performs batch transformations |
+| AWS Glue / PySpark | Performs batch transformations, validation and curation |
 | AWS Lambda | One active JSON/reference-data function exists; its code is not yet captured here |
 | Amazon Athena | Runs SQL directly against S3-backed tables |
 | GitHub | Stores scripts, SQL, documentation and validation checks |
@@ -76,7 +76,7 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 | `src/glue/de-youtube-reference-explode-job.py` | Explodes JSON `items`, selects category fields, writes Parquet | Uses overwrite mode; reruns replace the target prefix |
 | `src/glue/de-youtube-raw-to-cleansed-glue-job.py` | Reads the raw catalog table, applies mappings and a basic data-quality ruleset, writes Parquet | Historical runs failed parsing MX/KR CSV files; output path overlaps the CSV job |
 | `src/glue/de-youtube-statistics-reference-data-job.py` | Reads catalog and Parquet DynamicFrames and applies `gs_flatten` to the catalog frame | Captured code does not use the Parquet frame in the flatten operation or write a result |
-| `src/glue/youtube-tutorial-staging-validation.py` | Reads CSVs using ISO-8859-1 and an explicit schema; writes partitioned staging Parquet | Successful baseline, but formula-error IDs and duplicate keys remain |
+| `src/glue/youtube-tutorial-staging-validation.py` | Reads CSVs using ISO-8859-1 and an explicit schema; writes partitioned staging Parquet | Preserved as the tutorial-compatible staging layer; not the final analytics table |\n| `src/glue/youtube-portfolio-curation-v2.py` | Reads the staging Catalog table, rejects invalid IDs, removes exact duplicates, quarantines conflicting business keys, and writes safe/quarantine Parquet | Successful Glue 5.1 run; outputs are isolated under `curated/youtube_portfolio_v2/` |
 
 ## Verified data snapshot
 
@@ -88,7 +88,7 @@ Athena checks on the staging table returned **375,942 rows across 10 regions**. 
 - No blank video IDs, blank regions or negative views/likes/dislikes/comment counts were found.
 - The reference table contains 311 rows but only 32 distinct category IDs. A direct category join multiplies rows unless the reference table is deduplicated.
 
-After exact-row deduplication and excluding conflicting business keys, 359,936 rows remain as a conservative analytics subset. These are verified observations from Athena, not a claim that the raw staging data is already clean. The Glue staging log reported zero malformed CSV rows and zero blank IDs, but a stricter Athena check found 2,312 literal `#NAME?` video IDs. The revised category-performance query executed successfully and returned 99 region/category result rows after filtering invalid IDs, removing exact duplicates and excluding conflicting keys. See [verified-aws-state.md](docs/verified-aws-state.md) for query execution IDs and detailed findings.
+After exact-row deduplication and excluding conflicting business keys, the curation job published 359,936 rows across 10 regions. Athena independently confirmed zero invalid IDs and zero duplicate business keys in the new curated table. The quarantine table contains 2,312 invalid-ID rows and 1,298 conflicting rows (649 conflicting key groups). These are verified observations from Athena, not a claim that the original staging data is already clean. The Glue staging log reported zero malformed CSV rows and zero blank IDs, but a stricter Athena check found 2,312 literal `#NAME?` video IDs. The revised category-performance query executed successfully and returned 99 region/category result rows after filtering invalid IDs, removing exact duplicates and excluding conflicting keys. See [verified-aws-state.md](docs/verified-aws-state.md) for query execution IDs and detailed findings.
 
 ## Run local checks
 
@@ -102,7 +102,7 @@ python3 -m compileall -q src/glue tests
 ## Safety and reproducibility
 
 - Do not rerun the append-mode job against the existing `youtube/` prefix until the duplicate-handling strategy is confirmed.
-- Do not overwrite the current S3 datasets during recovery. Test new transformations in a separate versioned prefix first.
+- Do not overwrite the current S3 datasets. The v2 curation outputs are isolated in a separate versioned prefix; its writes use `errorifexists`.
 - Do not broaden IAM policies just to make a job pass. Identify the exact bucket/prefix and grant only the required actions.
 - Keep credentials, `.env` files, raw datasets, generated Parquet, and unredacted logs out of Git.
 - The AWS resource names in the captured scripts are environment-specific. Replace them with configuration parameters before sharing a reusable deployment.
