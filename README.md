@@ -84,7 +84,7 @@ Athena checks on the staging table returned **375,942 rows across 10 regions**. 
 
 - 2,312 literal `#NAME?` values in `video_id`.
 - 12,703 duplicate business-key groups with 13,045 extra rows among valid IDs.
-- 12,386 extra rows were exact duplicates; 659 were conflicting duplicates across 649 keys.
+- 12,396 extra rows were exact duplicates; 649 were conflicting variants across 649 keys.
 - No blank video IDs, blank regions or negative views/likes/dislikes/comment counts were found.
 - The reference table contains 311 rows but only 32 distinct category IDs. A direct category join multiplies rows unless the reference table is deduplicated.
 
