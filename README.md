@@ -62,6 +62,8 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 | AWS Glue / PySpark | Performs batch transformations, validation and curation |
 | AWS Lambda | One active JSON/reference-data function exists; its code is not yet captured here |
 | Amazon Athena | Runs SQL directly against S3-backed tables |
+| Amazon QuickSight | Not currently subscribed; no dashboard deployed |
+| AWS Step Functions | No state machine currently exists |
 | GitHub | Stores scripts, SQL, documentation and validation checks |
 
 ## Repository structure
@@ -101,6 +103,15 @@ Athena checks on the staging table returned **375,942 rows across 10 regions**. 
 
 After exact-row deduplication and excluding conflicting business keys, the curation job published 359,936 rows across 10 regions. Athena independently confirmed zero invalid IDs and zero duplicate business keys in the new curated table. The quarantine table contains 2,312 invalid-ID rows and 1,298 conflicting rows (649 conflicting key groups). These are verified observations from Athena, not a claim that the original staging data is already clean. The Glue staging log reported zero malformed CSV rows and zero blank IDs, but a stricter Athena check found 2,312 literal `#NAME?` video IDs. The revised category-performance query executed successfully and returned 99 region/category result rows after filtering invalid IDs, removing exact duplicates and excluding conflicting keys. See [verified-aws-state.md](docs/verified-aws-state.md) for query execution IDs and detailed findings.
 
+## BI and dashboard queries
+
+Three Athena queries are validated against the curated table:
+
+- `sql/06_region_dashboard_kpis.sql` — regional observations, unique videos, observed views and engagement rate.
+- `sql/07_category_dashboard_performance.sql` — regional category comparisons with a deduplicated category lookup.
+- `sql/08_top_videos.sql` — top videos by peak observed views within each region.
+
+The metric definitions and query grain are in [dashboard-data-model.md](docs/dashboard-data-model.md). The AWS account is not currently subscribed to QuickSight, so there is no deployed QuickSight dashboard. The tested Athena outputs are ready to connect to Power BI or another BI tool.
 ## Run local checks
 
 The Glue scripts require the AWS Glue runtime and cannot be executed as ordinary local Python programs. The repository checks validate Python syntax and project structure without connecting to AWS.
