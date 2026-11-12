@@ -32,7 +32,7 @@ job = Job(glue_context)
 job.init(args["JOB_NAME"], args)
 
 source_name = f'{args["SOURCE_DATABASE"]}.{args["SOURCE_TABLE"]}'
-source = spark.table(source_name)
+source = glue_context.create_dynamic_frame.from_catalog(\n    database=args["SOURCE_DATABASE"],\n    table_name=args["SOURCE_TABLE"],\n).toDF()
 
 business_key = ["region", "video_id", "trending_date"]
 all_columns = source.columns
