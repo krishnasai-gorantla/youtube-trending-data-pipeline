@@ -12,6 +12,7 @@ class RepositoryContractTests(unittest.TestCase):
             "de-youtube-reference-explode-job.py",
             "de-youtube-raw-to-cleansed-glue-job.py",
             "de-youtube-statistics-reference-data-job.py",
+            "youtube-tutorial-staging-validation.py",
         ]
         for filename in expected:
             with self.subTest(filename=filename):
@@ -29,8 +30,9 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("*.pem", ignore)
         self.assertNotIn(" data/", ignore)
 
-    def test_sql_validation_file_exists(self):
+    def test_sql_files_exist(self):
         self.assertTrue((ROOT / "sql" / "01_table_validation.sql").is_file())
+        self.assertTrue((ROOT / "sql" / "03_duplicate_audit.sql").is_file())
 
 
 if __name__ == "__main__":
