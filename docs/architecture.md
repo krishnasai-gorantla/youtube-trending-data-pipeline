@@ -29,7 +29,23 @@ The captured `spark.py` script:
 - The job's S3 write permissions must be scoped to the target prefix.
 - The current output prefix is also used by the catalog-based raw-to-cleansed job.
 
-## 3. Category reference JSON transformation
+## 3. Successful staging-validation path
+
+A fifth Glue job, `youtube-tutorial-staging-validation`, was present in AWS but missing from the original GitHub repository. Its script is now preserved at `src/glue/youtube-tutorial-staging-validation.py`.
+
+The job:
+
+1. Reads all regional CSVs using an explicit schema and `ISO-8859-1` encoding.
+2. Uses permissive CSV parsing and captures malformed records in `_corrupt_record`.
+3. Extracts the region from the source S3 path.
+4. Requires at least 300,000 rows and exactly 10 non-empty region values.
+5. Writes Snappy Parquet partitioned by region to `s3://de-on-youtube-cleansed-useast1-s3/staging/tutorial_compat/youtube/` using `errorifexists`.
+
+This job succeeded on 17 October 2026. Athena later confirmed 375,942 rows across 10 regions in `db_youtube_cleaned.tutorial_staging_youtube`.
+
+**Important limitation:** the script counts malformed rows and missing video IDs, but does not enforce a threshold for either; it drops `_corrupt_record` before writing. Athena found 2,312 literal `#NAME?` video IDs in the staged table. The staging job is the best current baseline, but it still needs a quarantine/rejection policy.
+
+## 4. Category reference JSON transformation
 
 The captured `de-youtube-reference-explode-job.py` script:
 
@@ -39,15 +55,15 @@ The captured `de-youtube-reference-explode-job.py` script:
 4. Casts `id` to `bigint`.
 5. Writes Snappy Parquet in **overwrite** mode to `s3://de-on-youtube-cleansed-useast1-s3/statistics_reference_data/`.
 
-Overwrite mode replaces the contents at the target prefix on a successful write. Confirm that this is intentional before rerunning it.
+The reference table contains 311 rows but only 32 distinct category IDs. Each category ID is repeated across regional source files. Joining it directly on `category_id = id` multiplies statistics rows. Deduplicate the reference table by `id` before joining, or retain region in the reference data if localized labels are required.
 
-## 4. Catalog-based raw-to-cleansed job
+## 5. Catalog-based raw-to-cleansed job
 
 The captured `de-youtube-raw-to-cleansed-glue-job.py` reads `de-youtube-raw.raw_statistics`, applies explicit mappings to 17 fields, evaluates the rule `ColumnCount > 0`, and writes Parquet to the same `youtube/` prefix used by `spark.py`.
 
 The rule `ColumnCount > 0` checks the presence of columns; it does not validate row-level nulls, duplicate keys, numeric ranges, timestamps, or business rules. The recorded job failures identify CSV parsing problems in `MXvideos.csv` and `KRvideos.csv`.
 
-## 5. Statistics reference-data job
+## 6. Statistics reference-data job
 
 The captured `de-youtube-statistics-reference-data-job.py`:
 
@@ -58,21 +74,28 @@ The captured `de-youtube-statistics-reference-data-job.py`:
 
 In the captured script, the Parquet DynamicFrame is not passed to the flatten transform and no explicit output/write operation appears. The AWS job configuration supplies `gs_flatten.py` through `--extra-py-files`. The job's intended role must be confirmed from the Glue Studio visual graph before it is redesigned.
 
-## 6. Analytics layer
+## 7. Analytics and observed data quality
 
-The inspected cleaned catalog database was `db_youtube_cleaned`. It included `youtube`, `statistics_reference_data`, and several staging/curated tables. The `youtube` table exposes a `region` column and fields including `video_id`, `category_id`, `views`, `likes`, and `comment_count`. The reference table exposes `id` and `snippet_title`, which can be joined to map category IDs to names.
+The cleaned database `db_youtube_cleaned` includes `youtube`, `tutorial_staging_youtube`, and `statistics_reference_data`. Athena checks on the staging table found:
 
-Athena is enabled and was used to count rows in the two main tables. See [verified-aws-state.md](verified-aws-state.md) and the SQL files for the recorded evidence.
+- 375,942 rows across 10 regions.
+- Zero blank video IDs, zero blank regions and zero negative values in views, likes, dislikes or comment counts.
+- 2,312 rows where `video_id = '#NAME?'`.
+- 12,703 duplicate business-key groups (`region, video_id, trending_date`) with 13,045 extra rows among otherwise valid IDs. Of those extras, 12,386 were exact duplicate rows and 659 were conflicting rows across 649 keys.
+- 311 reference rows but only 32 distinct category IDs. A direct join on category ID inflated the row count from 375,942 to 3,734,265. A deduplicated category lookup restores a one-row-per-video-observation join.
 
-## 7. Recovery design
+These results show why row counts and non-null checks alone are insufficient. See [verified-aws-state.md](verified-aws-state.md) and the Athena SQL files for query IDs and reproducible checks.
 
-1. Preserve the current S3 data and the four captured Glue scripts.
-2. Fix the CSV reader and validate every source file in an isolated test output prefix.
-3. Give each transformation a distinct output prefix; do not have two jobs write to `youtube/`.
-4. Add row-level quality checks: required columns, null key fields, duplicate business keys, valid region, parseable dates, and non-negative metrics.
-5. Make reruns deterministic. Use a clean versioned output prefix or partition overwrite strategy with explicit run controls.
-6. Build curated category/region aggregates only after the cleansed dataset passes checks.
-7. Validate Glue Catalog locations and schemas against the actual S3 output.
-8. Add orchestration and BI only after each individual stage has repeatable evidence.
+## 8. Recovery design
+
+1. Preserve the current raw and cleansed S3 data and all captured job scripts.
+2. Use the successful staging output as the baseline for comparisons, not as a fully clean final dataset.
+3. Reject or quarantine formula-error IDs and malformed CSV records with source-file lineage.
+4. Deduplicate exact duplicate rows and explicitly reconcile conflicting business keys.
+5. Give each transformation a distinct output prefix; do not have two jobs write to `youtube/`.
+6. Make reruns deterministic and validate output counts before promotion.
+7. Deduplicate reference data by ID or preserve region for localized category names.
+8. Confirm Glue Catalog locations and schemas against the actual S3 output.
+9. Add orchestration and BI only after each stage has repeatable evidence.
 
 No AWS resources should be deleted or overwritten as part of this documentation recovery.
