@@ -47,6 +47,10 @@ A query executed successfully on 12 November 2026:
 
 Query execution ID: `e30c01ab-643e-4cdd-b8e1-058943115fe7`.
 
+A three-table validation query was also executed successfully, returning 375,942 rows in `youtube`, 375,942 rows in `tutorial_staging_youtube`, and 311 rows in `statistics_reference_data`. Query execution ID: `cd3d48e1-c819-4c69-b59a-9ce45cd80a1e`.
+
+The staging job ran on Glue 5.1 with two G.1X workers for 133 seconds. Its CloudWatch output recorded 375,942 rows, 10 regions, `malformed_rows=0`, and `missing_video_id_rows=0`. This blank-ID check did not catch the literal `#NAME?` values reported below.
+
 The staging region distribution was:
 
 | Region | Rows |
@@ -106,7 +110,7 @@ The reference table contained 311 rows and 32 distinct category IDs. A direct jo
 
 The revised category-performance query executed successfully and returned 99 region/category rows after deduplicating the reference lookup, removing exact duplicate records, excluding conflicting business keys and filtering the literal `#NAME?` IDs. Query execution ID: `2ee40cd5-aa84-4d28-8b9d-57c613765327`.
 
-The category labels appeared consistent across the inspected regional copies. If localized category names are required, preserve the region key instead of selecting an arbitrary label.
+A follow-up query found no category IDs with more than one distinct title across the regional copies (query ID `0c3620b4-aa82-4673-a67e-11408fa8f216`). If localized category names are required in a future dataset, preserve the region key rather than collapsing by ID.
 
 ## Earlier Athena count query
 
