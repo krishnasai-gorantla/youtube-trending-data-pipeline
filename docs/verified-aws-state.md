@@ -125,7 +125,7 @@ The cleaned database `db_youtube_cleaned` contained six tables during inspection
 
 ## Safe next verification steps
 
-1. Inspect the Glue staging job's CloudWatch log for its malformed-row count.
+1. Add a data-quality gate for literal `#NAME?` video IDs; the staging CloudWatch log was inspected and reported zero malformed CSV rows.
 2. Quarantine `#NAME?` IDs and malformed CSV rows rather than silently dropping the corrupt-record marker.
 3. Remove exact duplicate rows and quarantine the 649 conflicting business keys for reconciliation.
 4. Deduplicate category reference data by ID (or retain region for localized labels).
