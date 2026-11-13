@@ -77,7 +77,9 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(payload["quality"]["safe_rows"], 359936)
         self.assertEqual(payload["quality"]["duplicate_key_groups"], 0)
         self.assertEqual(len(payload["regions"]), 10)
+        self.assertEqual(len(payload["categories"]), 15)
         self.assertIn("fetch('./data.json'", dashboard_html)
+        self.assertIn("categoryRows", dashboard_html)
 
     def test_sql_files_exist(self):
         self.assertTrue((ROOT / "sql" / "01_table_validation.sql").is_file())
