@@ -25,7 +25,9 @@
     "StartStagingCrawler": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
-      "Parameters": {"Name": "youtube-pipeline-staging-crawler"},
+      "Parameters": {
+        "Name": "youtube-pipeline-staging-crawler"
+      },
       "ResultPath": null,
       "Next": "WaitForStagingCrawler"
     },
@@ -37,14 +39,41 @@
     "CheckStagingCrawler": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
-      "Parameters": {"Name": "youtube-pipeline-staging-crawler"},
+      "Parameters": {
+        "Name": "youtube-pipeline-staging-crawler"
+      },
       "ResultPath": "$.crawler",
       "Next": "StagingCrawlerReady"
     },
     "StagingCrawlerReady": {
       "Type": "Choice",
       "Choices": [
-        {"Variable": "$.crawler.Crawler.State", "StringEquals": "READY", "Next": "CurateAndQuarantine"}
+        {
+          "And": [
+            {
+              "Variable": "$.crawler.Crawler.State",
+              "StringEquals": "READY"
+            },
+            {
+              "Variable": "$.crawler.Crawler.LastCrawl.Status",
+              "StringEquals": "SUCCEEDED"
+            }
+          ],
+          "Next": "CurateAndQuarantine"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.crawler.Crawler.State",
+              "StringEquals": "READY"
+            },
+            {
+              "Variable": "$.crawler.Crawler.LastCrawl.Status",
+              "StringEquals": "FAILED"
+            }
+          ],
+          "Next": "StagingCrawlerFailed"
+        }
       ],
       "Default": "WaitForStagingCrawler"
     },
@@ -63,7 +92,9 @@
     "StartSafeCrawler": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
-      "Parameters": {"Name": "youtube-pipeline-safe-crawler"},
+      "Parameters": {
+        "Name": "youtube-pipeline-safe-crawler"
+      },
       "ResultPath": null,
       "Next": "WaitForSafeCrawler"
     },
@@ -75,21 +106,50 @@
     "CheckSafeCrawler": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
-      "Parameters": {"Name": "youtube-pipeline-safe-crawler"},
+      "Parameters": {
+        "Name": "youtube-pipeline-safe-crawler"
+      },
       "ResultPath": "$.safe_crawler",
       "Next": "SafeCrawlerReady"
     },
     "SafeCrawlerReady": {
       "Type": "Choice",
       "Choices": [
-        {"Variable": "$.safe_crawler.Crawler.State", "StringEquals": "READY", "Next": "StartQuarantineCrawler"}
+        {
+          "And": [
+            {
+              "Variable": "$.safe_crawler.Crawler.State",
+              "StringEquals": "READY"
+            },
+            {
+              "Variable": "$.safe_crawler.Crawler.LastCrawl.Status",
+              "StringEquals": "SUCCEEDED"
+            }
+          ],
+          "Next": "StartQuarantineCrawler"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.safe_crawler.Crawler.State",
+              "StringEquals": "READY"
+            },
+            {
+              "Variable": "$.safe_crawler.Crawler.LastCrawl.Status",
+              "StringEquals": "FAILED"
+            }
+          ],
+          "Next": "SafeCrawlerFailed"
+        }
       ],
       "Default": "WaitForSafeCrawler"
     },
     "StartQuarantineCrawler": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
-      "Parameters": {"Name": "youtube-pipeline-quarantine-crawler"},
+      "Parameters": {
+        "Name": "youtube-pipeline-quarantine-crawler"
+      },
       "ResultPath": null,
       "Next": "WaitForQuarantineCrawler"
     },
@@ -101,19 +161,62 @@
     "CheckQuarantineCrawler": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
-      "Parameters": {"Name": "youtube-pipeline-quarantine-crawler"},
+      "Parameters": {
+        "Name": "youtube-pipeline-quarantine-crawler"
+      },
       "ResultPath": "$.quarantine_crawler",
       "Next": "QuarantineCrawlerReady"
     },
     "QuarantineCrawlerReady": {
       "Type": "Choice",
       "Choices": [
-        {"Variable": "$.quarantine_crawler.Crawler.State", "StringEquals": "READY", "Next": "PipelineSucceeded"}
+        {
+          "And": [
+            {
+              "Variable": "$.quarantine_crawler.Crawler.State",
+              "StringEquals": "READY"
+            },
+            {
+              "Variable": "$.quarantine_crawler.Crawler.LastCrawl.Status",
+              "StringEquals": "SUCCEEDED"
+            }
+          ],
+          "Next": "PipelineSucceeded"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.quarantine_crawler.Crawler.State",
+              "StringEquals": "READY"
+            },
+            {
+              "Variable": "$.quarantine_crawler.Crawler.LastCrawl.Status",
+              "StringEquals": "FAILED"
+            }
+          ],
+          "Next": "QuarantineCrawlerFailed"
+        }
       ],
       "Default": "WaitForQuarantineCrawler"
     },
     "PipelineSucceeded": {
       "Type": "Succeed"
+    },
+    "StagingCrawlerFailed": {
+      "Type": "Fail",
+      "Error": "StagingCrawlerFailed",
+      "Cause": "Glue crawler failed to register staging partitions."
+    },
+    "SafeCrawlerFailed": {
+      "Type": "Fail",
+      "Error": "SafeCrawlerFailed",
+      "Cause": "Glue crawler failed to register safe curated partitions."
+    },
+    "QuarantineCrawlerFailed": {
+      "Type": "Fail",
+      "Error": "QuarantineCrawlerFailed",
+      "Cause": "Glue crawler failed to register quarantine partitions."
     }
-  }
+  },
+  "TimeoutSeconds": 7200
 }
