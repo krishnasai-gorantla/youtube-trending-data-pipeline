@@ -70,8 +70,8 @@ function renderDashboard(data){
   if(regionalNote)regionalNote.textContent='Sum of daily trending observations'+(selected==='all'?' · all regions':' · '+selected.toUpperCase());
   const engagementNote=document.querySelectorAll('.two .panel .section-note')[1];
   if(engagementNote)engagementNote.textContent='(Likes + comments) ÷ views · '+(selected==='all'?'all regions':'selected region');
-  const performanceNote=document.querySelector('.panel .section-note');
-  if(performanceNote)performanceNote.textContent='Choose a region to inspect available video records in that market';
+  const performanceNote=document.querySelector('#videoRows')?.closest('.panel')?.querySelector('.section-note');
+  if(performanceNote)performanceNote.textContent='Available video records in this snapshot; this is not a complete per-region ranking';
  }
  filter.addEventListener('change',render); search.addEventListener('input',render);
  const meta=document.querySelector('.meta');
