@@ -20,7 +20,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;colo
 <div class="eyebrow">Data engineering portfolio · AWS / Glue / Athena</div>
 <h1>YouTube Trending<br>Analytics</h1>
 <p class="sub">A regional view of trending-video observations across ten markets, with engagement signals and the highest-peak-view videos in the validated dataset.</p>
-<div class="meta"><span class="pill">Snapshot: 12 Nov 2026</span><span class="pill">10 regions</span><span class="pill">Curated Parquet · Athena</span><span class="pill">Static query snapshot</span></div>
+<div class="meta"><span class="pill">Snapshot: 13 Nov 2026</span><span class="pill">10 regions</span><span class="pill">Curated Parquet · Athena</span><span class="pill">Static query snapshot</span><span class="pill">Run: e8ac90d7-a4fb-4e95-a0c1-1320038d943f</span></div>
 <section class="grid kpis" id="kpis"></section>
 <section class="grid two">
 <div class="panel"><h2 class="section-title">Observed views by region</h2><p class="section-note">Sum of daily trending observations, not unique lifetime views</p><div id="viewsChart"></div></div>
@@ -32,7 +32,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;colo
 </section>
 <section class="panel"><h2 class="section-title">Regional dataset</h2><p class="section-note">The unique-video count is calculated separately within each region</p><div style="overflow-x:auto"><table><thead><tr><th>Region</th><th class="num">Observations</th><th class="num">Unique videos</th><th class="num">Avg. views</th><th class="num">Engagement</th></tr></thead><tbody id="regionRows"></tbody></table></div></section>
 <div class="note"><b>Metric interpretation:</b> cumulative observed views sum the views field across daily trending records. The same video can appear on multiple days, so this is not a unique lifetime-view total. Regional unique-video counts can overlap across markets. The dashboard is a reproducible snapshot of Athena query results, not a live connection to AWS.</div>
-<div class="footer">Source: db_youtube_cleaned.youtube_portfolio_v2 · Athena query outputs committed as a static portfolio snapshot · Built for the YouTube Trending Data Pipeline project.</div>
+<div class="footer">Source: db_youtube_cleaned.youtube_pipeline_safe · run e8ac90d7-a4fb-4e95-a0c1-1320038d943f · Athena query outputs committed as a static portfolio snapshot · Built for the YouTube Trending Data Pipeline project.</div>
 </main>
 <script>
 const regions=[{"region":"ca","observations":40881,"unique":24427,"views":46891975069,"avg":1147036,"engagement":3.8905},{"region":"de","observations":40840,"unique":29627,"views":24645115205,"avg":603455,"engagement":4.0867},{"region":"fr","observations":40724,"unique":30581,"views":17100897444,"avg":419922,"engagement":4.5774},{"region":"gb","observations":38739,"unique":3272,"views":229014874447,"avg":5911739,"engagement":2.4958},{"region":"in","observations":31897,"unique":16286,"views":29333841011,"avg":919643,"engagement":2.7263},{"region":"jp","observations":14254,"unique":12783,"views":3169851948,"avg":222383,"engagement":3.1775},{"region":"kr","observations":31695,"unique":15869,"views":13180778732,"avg":415863,"engagement":3.2492},{"region":"mx","observations":39884,"unique":33511,"views":13474579584,"avg":337844,"engagement":5.2542},{"region":"ru","observations":40125,"unique":34281,"views":9615193327,"avg":239631,"engagement":5.8875},{"region":"us","observations":40897,"unique":6351,"views":96542259301,"avg":2360620,"engagement":3.5041}];
