@@ -2,7 +2,7 @@
 
 A portfolio project exploring batch data engineering on AWS using the Kaggle YouTube Trending Videos dataset. The repository preserves the Glue scripts captured from the AWS environment and documents the verified state of the pipeline, its known defects, and the recovery plan.
 
-> **Current state:** The original staging table is preserved. A separate Glue 5.1 curation job has now succeeded, publishing 359,936 validated rows to a new versioned Parquet prefix and retaining invalid/conflicting rows in quarantine. Both outputs are registered in the Glue Data Catalog and verified with Athena. See [the curation runbook](docs/curated-dataset-v2.md) and [the AWS verification record](docs/verified-aws-state.md).
+> **Current state:** The original tutorial data and jobs are preserved. A repeatable AWS Step Functions workflow now orchestrates new run-isolated staging, quality curation, quarantine and Glue Catalog registration. The earlier v2 curated snapshot remains verified at 359,936 safe rows. See [the orchestration runbook](docs/end-to-end-orchestration.md), [the dashboard](docs/dashboard/index.html), and [the AWS verification record](docs/verified-aws-state.md).
 
 ## Project goals
 
@@ -62,8 +62,8 @@ This diagram describes the intended flow from the scripts and AWS resources insp
 | AWS Glue / PySpark | Performs batch transformations, validation and curation |
 | AWS Lambda | One active JSON/reference-data function exists; its code is not yet captured here |
 | Amazon Athena | Runs SQL directly against S3-backed tables |
-| Amazon QuickSight | Not currently subscribed; no dashboard deployed |
-| AWS Step Functions | No state machine currently exists |
+| Amazon QuickSight | Not currently subscribed; dashboard uses a GitHub Pages-ready static snapshot instead |
+| AWS Step Functions | Orchestrates the repeatable staging → catalog → curation → safe/quarantine catalog workflow |
 | GitHub | Stores scripts, SQL, documentation and validation checks |
 
 ## Repository structure
@@ -110,8 +110,13 @@ Three Athena queries are validated against the curated table:
 - `sql/06_region_dashboard_kpis.sql` — regional observations, unique videos, observed views and engagement rate.
 - `sql/07_category_dashboard_performance.sql` — regional category comparisons with a deduplicated category lookup.
 - `sql/08_top_videos.sql` — top videos by peak observed views within each region.
+- `sql/09_pipeline_region_kpis.sql`, `sql/10_pipeline_category_performance.sql`, and `sql/11_pipeline_top_videos.sql` — equivalent analysis against a specific run of the new automated pipeline; replace `<RUN_ID>` with the Step Functions run ID.
 
 The metric definitions and query grain are in [dashboard-data-model.md](docs/dashboard-data-model.md). The AWS account is not currently subscribed to QuickSight, so there is no deployed QuickSight dashboard. The tested Athena outputs are ready to connect to Power BI or another BI tool.
+## Run the automated AWS pipeline
+
+Start the Step Functions state machine `youtube-trending-end-to-end` in `us-east-1` with input `{}`. It generates a unique run ID and runs both Glue jobs plus the three catalog crawlers. Each execution writes to a new partitioned output and preserves earlier runs. Full details: [end-to-end orchestration](docs/end-to-end-orchestration.md).
+
 ## Run local checks
 
 The Glue scripts require the AWS Glue runtime and cannot be executed as ordinary local Python programs. The repository checks validate Python syntax and project structure without connecting to AWS.
