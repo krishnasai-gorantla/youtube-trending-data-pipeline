@@ -1,110 +1,102 @@
-# YouTube Trending Data Engineering Pipeline
+# YouTube Trending Data Pipeline
 
-An AWS batch data-engineering portfolio project built around the Kaggle YouTube Trending Videos dataset. It demonstrates ingestion, schema-aware transformation, data-quality controls, quarantine handling, catalog registration, SQL analytics and a lightweight interactive dashboard.
+This is a batch data-engineering project using the public Kaggle YouTube Trending Videos dataset. I used AWS S3, Glue and PySpark to process the regional CSV files, apply data-quality rules and write Parquet outputs. I then queried the curated data with Athena and built a small HTML dashboard from the query results.
 
-> **Portfolio status (13 November 2026):** The end-to-end AWS pipeline has completed successful test executions and its latest verified snapshot contains **359,936 safe records across 10 regions**. Automatic AWS triggers and scheduled dashboard refreshes are intentionally paused to avoid ongoing cloud usage. Source data, S3 outputs, Glue jobs, Step Functions definition, SQL and the static dashboard snapshot are preserved.
+## Current status
 
-## What this project demonstrates
+The latest successful pipeline run is dated 13 November 2026. It processed 375,942 staging rows from 10 regions and produced 359,936 accepted rows. Invalid video IDs and conflicting business-key records were kept in a separate quarantine output.
 
-- Ingesting regional CSV data from Amazon S3.
-- Transforming raw data to Snappy Parquet with AWS Glue and PySpark.
-- Applying explicit validation, exact-row deduplication and business-key conflict detection.
-- Separating accepted records from rejected records in safe and quarantine outputs.
-- Registering partitions and tables in the AWS Glue Data Catalog.
-- Querying curated data with Amazon Athena.
-- Building regional, category and top-video analytics and a static interactive HTML dashboard.
-- Designing a run-isolated Step Functions orchestration flow and documenting cloud cost controls.
+The pipeline has been run and validated, but it is not running continuously. Automatic AWS triggers and scheduled dashboard refreshes are paused to avoid ongoing charges. The dashboard uses a committed data snapshot; it is not connected to YouTube or AWS live queries.
+
+## What I worked on
+
+- Stored the regional source CSV files in Amazon S3.
+- Used AWS Glue and PySpark to apply a schema and write Snappy Parquet.
+- Defined the business key as `(region, video_id, trending_date)`.
+- Removed exact duplicate rows and quarantined invalid video IDs and conflicting records instead of choosing an arbitrary version.
+- Registered the staging, safe and quarantine outputs in the Glue Data Catalog.
+- Used Athena SQL for regional, category and top-video analysis.
+- Built an HTML dashboard that reads a JSON snapshot of the query results.
 
 ## Architecture
 
 ```text
-Kaggle regional CSV files
-          |
-          v
-    Amazon S3 (raw)
-          |
-          v
-AWS Glue + PySpark staging
-          |
-          v
-  Staging Parquet / Catalog
-          |
-          v
-   Data-quality curation
-       /          \
-      v            v
- Safe Parquet   Quarantine Parquet
-      \            /
-       v          v
-      Glue Data Catalog
-              |
-              v
-        Amazon Athena
-              |
-       SQL analytics
-              |
-              v
-   Interactive HTML dashboard
-   (static, versioned snapshot)
+Kaggle CSV files
+      |
+      v
+Amazon S3 (raw)
+      |
+      v
+AWS Glue / PySpark
+      |
+      v
+Staging Parquet
+      |
+      v
+Data-quality curation
+    /       \
+   v         v
+Safe data  Quarantine
+    \       /
+     v     v
+Glue Data Catalog
+      |
+      v
+Amazon Athena
+      |
+      v
+HTML dashboard (static snapshot)
 ```
 
-The implemented Step Functions workflow coordinates staging, catalog registration, curation and separate safe/quarantine catalog registration. It has completed successful test executions. The EventBridge batch-ready rule is currently **DISABLED** and the raw bucket EventBridge notification configuration is empty, so uploading a marker will not start a new run unless the trigger is deliberately reconfigured. This is intentional for cost control.
+AWS Step Functions coordinates the staging, curation and crawler steps. The workflow completed successful test executions. Its automatic trigger is currently disabled; a future run must be started deliberately.
 
-## Verified data-quality snapshot
+## Latest validated data
 
-Latest published dashboard snapshot: `docs/dashboard/data.json`.
-
-| Metric | Verified result |
+| Check | Result |
 |---|---:|
-| Staging records | 375,942 |
+| Staging rows | 375,942 |
 | Regions | 10 |
-| Safe curated records | 359,936 |
-| Unique video IDs in safe set | 184,180 |
-| Invalid IDs retained in quarantine | 2,312 |
-| Conflicting rows retained in quarantine | 1,298 |
-| Duplicate business-key groups in safe output | 0 |
+| Accepted rows | 359,936 |
+| Unique video IDs in accepted data | 184,180 |
+| Invalid-ID rows quarantined | 2,312 |
+| Conflicting rows quarantined | 1,298 |
+| Duplicate business-key groups in accepted data | 0 |
 
-The business key is `(region, video_id, trending_date)`. Exact duplicate rows are removed. If multiple non-identical records share a business key, all conflicting variants are quarantined rather than selecting one arbitrarily. The reference category lookup must be deduplicated by category ID before joining because the source contains repeated regional copies.
+The 1,298 conflicting rows came from 649 business-key groups. If records shared a business key but differed in other fields, I quarantined all variants rather than deciding which one was correct.
 
-These figures describe the historical dataset snapshot, not live YouTube activity.
+These counts describe the dataset snapshot, not live YouTube activity.
 
-## Technology
+## Tools
 
-Amazon S3 · AWS Glue · PySpark · Glue Data Catalog · Amazon Athena · AWS Step Functions · EventBridge · Python · SQL · GitHub Actions · HTML/CSS/JavaScript
+Amazon S3, AWS Glue, PySpark, Glue Data Catalog, Amazon Athena, AWS Step Functions, Python, SQL, GitHub Actions, HTML, CSS and JavaScript.
 
-Amazon QuickSight is not part of this implementation; no QuickSight subscription was created. The dashboard is a static HTML application backed by a committed JSON snapshot.
+## Project files
 
-## Explore the project
+- [Live dashboard](https://krishnasai-gorantla.github.io/youtube-trending-data-pipeline/)
+- [Dashboard source and data](docs/dashboard/)
+- [Athena SQL queries](sql/)
+- [Pipeline architecture](docs/end-to-end-orchestration.md)
+- [AWS verification notes](docs/verified-aws-state.md)
+- [Interview notes](docs/recruiter-guide.md)
 
-- [Interactive dashboard source](docs/dashboard/index.html) — open locally or use GitHub Pages after enabling it.
-- [Dashboard data snapshot](docs/dashboard/data.json)
-- [End-to-end architecture and runbook](docs/end-to-end-orchestration.md)
-- [Verified AWS state and execution evidence](docs/verified-aws-state.md)
-- [Recruiter and interview guide](docs/recruiter-guide.md)
-- [Dashboard hosting instructions](docs/dashboard/README.md)
-- [Athena SQL](sql/)
+## View the dashboard locally
 
-## Run the dashboard locally
-
-From the repository root:
+From the repository root, run:
 
 ```bash
 python -m http.server 8000
 ```
 
-Open `http://localhost:8000/docs/dashboard/`. The page includes a fallback snapshot for browsers that restrict local JSON loading.
+Then open `http://localhost:8000/docs/dashboard/`.
 
-## Cost-conscious operating status
+## Limitations and next steps
 
-No recurring dashboard refresh workflow is active. The former hourly workflow has been removed from `.github/workflows/` and retained as a disabled archive under `docs/disabled-workflows/`. The EventBridge trigger is disabled, the raw S3 EventBridge notification configuration is empty, and the JSON-reference Lambda has reserved concurrency set to zero. Do not start Glue jobs, Athena queries or Step Functions executions unless you intend to incur usage-based charges. AWS credits are not a hard spending cap.
+- The source is a historical Kaggle dataset, not a live YouTube feed.
+- The dashboard contains a limited top-video snapshot; it is not a complete ranking for every region.
+- Some source text has encoding artefacts that still need cleaning.
+- AWS automatic triggers and scheduled refreshes are paused.
+- A useful next improvement would be to add more automated tests using representative input files and to improve text-encoding handling.
 
-## Known limitations
+## Dataset and project background
 
-- The source is a historical Kaggle dataset; the dashboard is not live.
-- Some source titles contain character-encoding artefacts; numeric metrics and quality checks were validated separately.
-- The pipeline is preserved and tested, but automatic execution is paused.
-- GitHub Pages is not yet confirmed as enabled. Follow the dashboard hosting instructions to publish a public rendered dashboard URL.
-
-## Attribution
-
-The project was developed as a learning portfolio using the public Kaggle YouTube Trending Videos dataset and was informed by a public AWS data-engineering tutorial. The repository documents the additional validation, quarantine, run-isolation, SQL analytics and dashboard work completed here.
+The source data is the public Kaggle YouTube Trending Videos dataset. I used a public AWS data-engineering tutorial as a starting point, then added the data-quality curation, quarantine handling, run-isolated orchestration, Athena queries and dashboard documented in this repository.
