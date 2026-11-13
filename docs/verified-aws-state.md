@@ -14,7 +14,9 @@ The successful pipeline runs and query results recorded below remain historical 
 
 ---
 
-# AWS Verification Record
+# Historical AWS Verification Record
+
+The sections below preserve the original investigation history. Where an older section describes an enabled trigger, scheduled refresh, or disabled GitHub Pages, it records a past state and is superseded by the current status correction at the top of this file. The current operating state is the one to use for deployment, cost and CV descriptions.
 
 This file records evidence gathered from the connected AWS environment. Treat it as a snapshot, not a live status page. Re-run checks before deployment or a CV claim.
 
@@ -51,11 +53,11 @@ All three crawlers finished in READY state with `LastCrawl.Status=SUCCEEDED`. To
 
 The safe output is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/safe/`; quarantine is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/quarantine/`. Glue Catalog tables are `db_youtube_cleaned.youtube_pipeline_safe` and `db_youtube_cleaned.youtube_pipeline_quarantine`. The run-scoped Athena templates are `sql/09` through `sql/11`.
 
-**Trigger and dashboard status:** S3 EventBridge notifications are enabled on the raw bucket. The enabled rule `youtube-pipeline-batch-ready` matches `pipeline_triggers/*.ready` object-created events and targets the Step Functions state machine through a dedicated role with `states:StartExecution` only. The event pattern passed `TestEventPattern`; the trigger has now been fired with a controlled test marker and the retry completed successfully (see the latest rerun evidence above). To start a future batch automatically, upload all 10 regional CSVs first, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready`. Use a new key per batch; S3/EventBridge delivery is at-least-once, so duplicate marker notifications can create duplicate executions. Manual execution with `{}` remains available for recovery.
+**Historical trigger and dashboard status (superseded):** At the time of this earlier check, S3 EventBridge notifications were enabled on the raw bucket. The enabled rule `youtube-pipeline-batch-ready` matches `pipeline_triggers/*.ready` object-created events and targets the Step Functions state machine through a dedicated role with `states:StartExecution` only. The event pattern passed `TestEventPattern`; the trigger has now been fired with a controlled test marker and the retry completed successfully (see the latest rerun evidence above). To start a future batch automatically, upload all 10 regional CSVs first, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready`. Use a new key per batch; S3/EventBridge delivery is at-least-once, so duplicate marker notifications can create duplicate executions. Manual execution with `{}` remains available for recovery.
 
-Dashboard data is now refreshed automatically by GitHub Actions at minute 17 of every hour (and on manual dispatch). The workflow uses GitHub OIDC to assume `arn:aws:iam::303102153405:role/youtube-dashboard-refresh-github-actions`; its trust is restricted to this repository's immutable owner/repository IDs and `main` branch. Its permissions are limited to reading Step Functions execution metadata, the curated Glue Catalog tables and S3 Parquet, running Athena queries, and writing Athena results to a dedicated temporary prefix. It cannot start Glue jobs or modify source/curated data. The first authenticated refresh succeeded (workflow run `43432957979`); a follow-up run confirmed unchanged data does not create another commit (`43433160585`). The JSON output is `docs/dashboard/data.json`; `index.html` loads it with an embedded fallback snapshot.
+At the time of this earlier check, dashboard data was refreshed automatically by GitHub Actions at minute 17 of every hour (and on manual dispatch). This scheduled refresh was subsequently paused and removed from the active workflows. The workflow uses GitHub OIDC to assume `arn:aws:iam::303102153405:role/youtube-dashboard-refresh-github-actions`; its trust is restricted to this repository's immutable owner/repository IDs and `main` branch. Its permissions are limited to reading Step Functions execution metadata, the curated Glue Catalog tables and S3 Parquet, running Athena queries, and writing Athena results to a dedicated temporary prefix. It cannot start Glue jobs or modify source/curated data. The first authenticated refresh succeeded (workflow run `43432957979`); a follow-up run confirmed unchanged data does not create another commit (`43433160585`). The JSON output is `docs/dashboard/data.json`; `index.html` loads it with an embedded fallback snapshot.
 
-GitHub Pages is not enabled yet. The publish workflow now detects that state and skips deployment cleanly instead of failing. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**, then run **Actions → Publish dashboard → Run workflow** once. After that, new dashboard data commits will be deployed automatically. Athena charges apply to scheduled refresh queries; QuickSight remains unsubscribed and no QuickSight subscription has been enabled.
+At the time of this earlier check, GitHub Pages was not enabled. This was subsequently enabled; the current status and successful deployment are recorded in the correction at the top of this file. Athena charges apply to scheduled refresh queries; QuickSight remains unsubscribed and no QuickSight subscription has been enabled.
 
 
 ## Latest end-to-end rerun — 13 November 2026
@@ -90,7 +92,7 @@ Total Glue compute for this run was 652 DPU-seconds (194 + 458). This test used 
 
 The dashboard snapshot was refreshed to this latest run ID. Regional metrics match the previous successful execution because the underlying source batch did not change.
 
-## Dashboard automation — 13 November 2026
+## Historical dashboard automation — 13 November 2026 (superseded)
 
 - GitHub OIDC provider: `arn:aws:iam::303102153405:oidc-provider/token.actions.githubusercontent.com`
 - Refresh role: `arn:aws:iam::303102153405:role/youtube-dashboard-refresh-github-actions`
