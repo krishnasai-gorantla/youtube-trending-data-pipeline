@@ -52,10 +52,12 @@ class RepositoryContractTests(unittest.TestCase):
         staging = (ROOT / "src" / "glue" / "youtube-pipeline-staging-v1.py").read_text(encoding="utf-8")
         curation = (ROOT / "src" / "glue" / "youtube-pipeline-curation-v1.py").read_text(encoding="utf-8")
         self.assertIn("partitionBy(\"run_id\", \"region\")", staging)
-        self.assertIn("mode(\"errorifexists\")", staging)
+        self.assertIn("mode(\"append\")", staging)
+        self.assertIn("list_objects_v2", staging)
         self.assertIn("push_down_predicate", curation)
         self.assertIn("conflicting_business_key", curation)
-        self.assertIn("mode(\"errorifexists\")", curation)
+        self.assertIn("mode(\"append\")", curation)
+        self.assertIn("list_objects_v2", curation)
 
     def test_dashboard_exists(self):
         dashboard = ROOT / "docs" / "dashboard" / "index.html"
