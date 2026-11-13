@@ -265,3 +265,22 @@ The cleaned database `db_youtube_cleaned` contained eight tables after curation,
 4. Subscribe to QuickSight only if the account owner approves the service and any associated charges; no subscription has been enabled.
 5. Investigate the observed mojibake in some text fields (for example, `GarcÃ­a`) in a separate encoding-correction transformation. Do not alter the validated numeric dataset in place.
 6. Review the 649 conflicting business keys and establish a documented reconciliation rule before promoting any quarantined variants.
+
+
+## Current cost-control verification — 13 November 2026 (supersedes older trigger/refresh statements above)
+
+A fresh read-only AWS check was performed after the pipeline tests. The following are the current observed settings:
+
+| Control | Current observed state |
+|---|---|
+| EventBridge rule `youtube-pipeline-batch-ready` | **DISABLED** |
+| Raw S3 bucket EventBridge notification configuration | Empty |
+| Lambda `de-youtube-raw-useast1-lambda-json-sheet` reserved concurrency | **0** |
+| Step Functions state machine | ACTIVE (definition retained; manual starts remain possible) |
+| Running executions in latest returned execution list | None; returned executions were SUCCEEDED, FAILED, SUCCEEDED |
+| Dashboard scheduled refresh workflow | Removed from active `.github/workflows/`; archived under `docs/disabled-workflows/` |
+| QuickSight account settings | No account settings found; this is consistent with QuickSight not being provisioned for this project |
+
+**Important correction to earlier sections in this file:** the EventBridge rule is no longer enabled, the raw bucket currently has no EventBridge notification configuration, and the dashboard refresh is no longer scheduled hourly. Earlier instructions in this historical record describing automatic marker-triggered runs or hourly refreshes are historical implementation notes, not current operating instructions. Do not upload a marker expecting it to trigger a run.
+
+The state machine, Glue resources, S3 source/curated data and committed dashboard snapshot are preserved. The state machine is still ACTIVE, so a deliberate manual execution can incur Glue and other usage charges. No claim is made that all AWS costs are zero or that the remaining AWS credit guarantees free usage. Check Billing and Cost Explorer directly for current charges and credit balance.
