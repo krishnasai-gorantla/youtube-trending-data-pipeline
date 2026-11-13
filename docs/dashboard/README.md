@@ -20,7 +20,7 @@ Then visit `http://localhost:8000/docs/dashboard/`.
 - Source: Athena query results from the latest verified successful pipeline run.
 - The source dataset is historical Kaggle data, not live YouTube activity.
 
-The regional summary contains all ten regions. The top-video table contains only the records included in this snapshot, so it should not be treated as a complete regional ranking.
+The regional summary contains all ten regions. The top-video table contains ten records per region (100 total), ranked by peak observed views. Likes are taken from the same observation as the peak views.
 
 ## Updating the dashboard
 
