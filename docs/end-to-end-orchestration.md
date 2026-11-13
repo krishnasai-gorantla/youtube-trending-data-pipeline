@@ -1,18 +1,18 @@
-# Automated AWS pipeline
+# AWS pipeline orchestration
 
-## Implemented workflow
+## What the workflow does
 
-The Step Functions state machine `youtube-trending-end-to-end` coordinates:
+The Step Functions state machine `youtube-trending-end-to-end` coordinates these stages:
 
-1. Generation of a unique run ID.
-2. Reading the 10 regional raw CSV files from S3.
-3. Writing run-partitioned staging data as Snappy Parquet.
-4. Running the staging Glue crawler.
-5. Applying validation and curation: invalid IDs are quarantined, exact duplicates are removed, and conflicting business-key variants are quarantined.
-6. Writing safe and quarantine Parquet outputs to separate run-partitioned S3 prefixes.
-7. Running separate Glue crawlers to register safe and quarantine partitions.
+1. Creates a unique run ID.
+2. Reads the 10 regional raw CSV files from S3.
+3. Writes staging data as Snappy Parquet, partitioned by run and region.
+4. Runs the staging Glue crawler.
+5. Runs the curation Glue job. It rejects invalid IDs, removes exact duplicate rows and quarantines conflicting business-key records.
+6. Writes safe and quarantine outputs to separate run-specific S3 prefixes.
+7. Runs crawlers to register the safe and quarantine outputs in the Glue Data Catalog.
 
-Two executions completed successfully on 13 November 2026. A first attempt failed due to a Spark output-path collision; the jobs were corrected to write to empty run-specific prefixes, and a retry succeeded. See [verified-aws-state.md](verified-aws-state.md) for execution IDs and validation evidence.
+The workflow completed successful test executions on 13 November 2026. One earlier attempt exposed an output-path collision. The jobs were changed to use empty run-specific output prefixes, and the retry succeeded.
 
 ## AWS resources
 
@@ -21,34 +21,37 @@ Two executions completed successfully on 13 November 2026. A first attempt faile
 - Glue tables: `youtube_pipeline_staging`, `youtube_pipeline_safe`, `youtube_pipeline_quarantine`
 - Glue crawlers: `youtube-pipeline-staging-crawler`, `youtube-pipeline-safe-crawler`, `youtube-pipeline-quarantine-crawler`
 - Staging S3 root: `s3://de-on-youtube-cleansed-useast1-s3/staging/youtube_pipeline/`
-- Curated S3 roots: `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/safe/` and `.../quarantine/`
+- Safe output: `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/safe/`
+- Quarantine output: `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/quarantine/`
 
 ## Data-quality rules
 
-The business key is `(region, video_id, trending_date)`. The curation process:
-- rejects blank, null or literal `#NAME?` video IDs;
-- removes exact duplicate rows;
-- quarantines every row for a business key when non-identical variants conflict;
-- validates the expected regional coverage before publishing the safe dataset.
+The business key is `(region, video_id, trending_date)`.
 
-The latest verified run produced 359,936 safe rows across 10 regions, with zero invalid IDs and zero duplicate business-key groups in the safe output. The corresponding quarantine snapshot contains 2,312 invalid-ID rows and 1,298 conflicting rows.
+- Blank, null and literal `#NAME?` video IDs are rejected.
+- Exact duplicate rows are removed.
+- If different rows share a business key, all variants for that key are quarantined.
+- The safe output is checked for duplicate business keys and expected regional coverage.
 
-## Current operating status — cost controls
+The latest verified run produced 359,936 safe rows across 10 regions. The quarantine output contained 2,312 invalid-ID rows and 1,298 conflicting rows. Athena checks found zero duplicate business-key groups in the safe output.
 
-The state machine remains defined and available for deliberate manual execution, but **automatic triggering is paused**:
+## Current operating status
 
-- EventBridge rule `youtube-pipeline-batch-ready`: **DISABLED**.
-- Raw S3 bucket EventBridge notification configuration: empty.
-- No running Step Functions executions were present in the latest check.
-- Dashboard scheduled refresh workflow: removed from active workflows and retained only as a disabled archive.
-- JSON-reference Lambda reserved concurrency: **0**.
+The pipeline has been tested, but automatic execution is paused to avoid ongoing AWS costs.
 
-Do not upload a `.ready` marker expecting it to trigger a run. The trigger must be intentionally reconfigured before any future automated batch. Manual Step Functions/Glue/Athena execution can incur usage-based AWS charges.
+- EventBridge rule `youtube-pipeline-batch-ready`: disabled.
+- Raw bucket EventBridge notification configuration: empty.
+- Dashboard scheduled refresh workflow: not active; the previous workflow is archived under `docs/disabled-workflows/`.
+- JSON-reference Lambda reserved concurrency: 0.
+- Step Functions state machine: retained and available for deliberate manual execution.
+- No running executions were present at the latest check.
+
+Do not expect a `.ready` marker upload to start a pipeline run while the trigger is disabled. Manual Step Functions, Glue and Athena activity can incur usage-based charges.
 
 ## Dashboard
 
-The static dashboard reads `docs/dashboard/data.json`. It can be viewed locally without AWS. The latest committed JSON snapshot is from 13 November 2026. GitHub Pages publishing is separate and requires Pages to be enabled in repository Settings → Pages → Build and deployment → Source: GitHub Actions, followed by a manual run of the Publish dashboard workflow.
+The dashboard reads `docs/dashboard/data.json`, a committed snapshot of Athena query results. It does not query AWS in the browser. GitHub Pages is enabled and the publish workflow has completed successfully. Publishing the static page does not run the AWS pipeline.
 
-## Cost and limitations
+## Evidence
 
-Each full pipeline execution starts two Glue jobs and crawlers, and Athena queries are usage-based. AWS credits do not guarantee that usage is free or prevent charges after credits are exhausted. QuickSight is not subscribed or used by this project.
+See [verified-aws-state.md](verified-aws-state.md) for execution details, validation query IDs and the recorded AWS checks.
