@@ -16,7 +16,7 @@ Then visit `http://localhost:8000/docs/dashboard/`.
 ## Data in the dashboard
 
 - Snapshot: `data.json`
-- Snapshot timestamp: 13 November 2026, 13:06:47 UTC
+- Snapshot timestamp: 13 November 2026, 15:30:00 UTC
 - Source: Athena query results from the latest verified successful pipeline run.
 - The source dataset is historical Kaggle data, not live YouTube activity.
 
