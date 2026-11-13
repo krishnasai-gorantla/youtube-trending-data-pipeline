@@ -1,32 +1,37 @@
 # Dashboard
 
-The dashboard is a small interactive HTML page backed by `data.json`.
+The dashboard is a lightweight interactive HTML page backed by the committed `data.json` snapshot.
 
 ## View locally
 
-1. Download the repository or open `docs/dashboard/index.html` from a local checkout.
-2. Open `index.html` in a browser. It contains a verified fallback snapshot if the browser blocks local `file://` requests for `data.json`.
-3. To preview the latest JSON file as the page would load it when hosted, run a local static server from the repository root:
+From the repository root:
 
-   ```bash
-   python -m http.server 8000
-   ```
+```bash
+python -m http.server 8000
+```
 
-   Then open `http://localhost:8000/docs/dashboard/`.
+Open `http://localhost:8000/docs/dashboard/`. The page also contains a fallback snapshot if local browser security blocks the JSON request.
 
-## Automatic data refresh
+## Data freshness
 
-- GitHub Actions workflow: `.github/workflows/refresh-dashboard-data.yml`
-- Schedule: hourly at minute 17 UTC, plus manual dispatch.
-- Authentication: GitHub Actions OIDC; no long-lived AWS access key is stored in GitHub.
-- Source of truth: latest successful execution of the AWS Step Functions state machine, then Athena queries against the run-partitioned safe and quarantine tables.
-- Output: `docs/dashboard/data.json`. The workflow commits only when the data changes.
-- Publishing: a separate GitHub Pages workflow deploys `docs/dashboard/` after dashboard files change.
+- Snapshot file: `docs/dashboard/data.json`
+- Latest snapshot timestamp: 2026-11-13 13:06:47 UTC
+- Source: latest verified successful AWS pipeline execution at the time the snapshot was generated.
+- This is a historical dataset snapshot, not a live feed.
 
-The dashboard refresh role is restricted to this repository's `main` branch and read-only access to pipeline execution metadata, curated tables and Athena query results. It cannot start Glue jobs or modify source data.
+The scheduled Athena refresh workflow has been removed from active GitHub Actions workflows to avoid recurring AWS usage. Its prior workflow file is retained as a disabled archive under `docs/disabled-workflows/`. Do not restore or schedule it unless you explicitly decide to incur the associated Athena and GitHub Actions usage.
 
-## Hosting
+## Publish with GitHub Pages
 
-GitHub Pages must be enabled once in repository settings: **Settings → Pages → Build and deployment → Source: GitHub Actions**. The deployment workflow is already in the repository. Once Pages is enabled, run **Actions → Publish dashboard → Run workflow** for the first deployment. Subsequent new pipeline runs refresh the JSON and trigger deployment automatically.
+The repository contains `.github/workflows/publish-dashboard.yml`. GitHub Pages must first be enabled by a repository administrator:
 
-Amazon QuickSight is intentionally not enabled; the account is not subscribed and no subscription charge was authorised.
+1. Open **Repository → Settings → Pages**.
+2. Under **Build and deployment**, choose **GitHub Actions** as the source.
+3. Open **Actions → Publish dashboard** and run the workflow manually.
+4. After the workflow succeeds, use the page URL reported by the deployment job. Do not use a guessed URL before deployment is confirmed.
+
+The linked GitHub account has repository admin permission, but this workflow does not enable Pages settings itself.
+
+## AWS cost notes
+
+The dashboard is static and can be viewed without running AWS services. Amazon QuickSight is not used and no QuickSight subscription has been created. The data refresh is intentionally manual/offline at present.
