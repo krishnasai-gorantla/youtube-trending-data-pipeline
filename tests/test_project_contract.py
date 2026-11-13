@@ -66,11 +66,13 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_dashboard_refresh_contract(self):
         refresh_script = ROOT / "scripts" / "refresh_dashboard.py"
-        workflow = ROOT / ".github" / "workflows" / "refresh-dashboard-data.yml"
+        active_workflow = ROOT / ".github" / "workflows" / "refresh-dashboard-data.yml"
+        archived_workflow = ROOT / "docs" / "disabled-workflows" / "refresh-dashboard-data.yml.disabled"
         dashboard_data = ROOT / "docs" / "dashboard" / "data.json"
         dashboard_html = (ROOT / "docs" / "dashboard" / "index.html").read_text(encoding="utf-8")
         self.assertTrue(refresh_script.is_file())
-        self.assertTrue(workflow.is_file())
+        self.assertFalse(active_workflow.exists())
+        self.assertTrue(archived_workflow.is_file())
         self.assertTrue(dashboard_data.is_file())
         ast.parse(refresh_script.read_text(encoding="utf-8"), filename=str(refresh_script))
         payload = json.loads(dashboard_data.read_text(encoding="utf-8"))
