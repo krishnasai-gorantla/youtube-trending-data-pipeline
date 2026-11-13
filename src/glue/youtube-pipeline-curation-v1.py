@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+import boto3
 from datetime import datetime, timezone
 
 from awsglue.context import GlueContext
@@ -81,11 +82,22 @@ if safe_rows.groupBy(*business_key).count().filter(
 ).limit(1).count():
     raise ValueError("Duplicate business key found in safe output")
 
-root = f"s3://{args['OUTPUT_BUCKET']}/{args['OUTPUT_PREFIX'].strip('/')}"
+root_prefix = args["OUTPUT_PREFIX"].strip("/")
+root = f"s3://{args['OUTPUT_BUCKET']}/{root_prefix}"
 safe_path = f"{root}/safe"
 quarantine_path = f"{root}/quarantine"
+s3 = boto3.client("s3")
+for output_prefix in (
+    f"{root_prefix}/safe/run_id={run_id}/",
+    f"{root_prefix}/quarantine/run_id={run_id}/",
+):
+    existing = s3.list_objects_v2(
+        Bucket=args["OUTPUT_BUCKET"], Prefix=output_prefix, MaxKeys=1
+    )
+    if existing.get("KeyCount", 0):
+        raise RuntimeError(f"Refusing to reuse non-empty output run prefix: {output_prefix}")
 (
-    safe_rows.write.mode("errorifexists")
+    safe_rows.write.mode("append")
     .format("parquet").option("compression", "snappy")
     .partitionBy("run_id", "region").save(safe_path)
 )
@@ -93,7 +105,7 @@ quarantine = invalid_rows.unionByName(
     conflicting_rows, allowMissingColumns=True
 )
 (
-    quarantine.write.mode("errorifexists")
+    quarantine.write.mode("append")
     .format("parquet").option("compression", "snappy")
     .partitionBy("run_id", "region").save(quarantine_path)
 )
