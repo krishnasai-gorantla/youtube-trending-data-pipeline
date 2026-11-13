@@ -1,3 +1,19 @@
+# Current status correction — 13 November 2026
+
+This section supersedes older status statements later in this file where they describe automatic triggers or scheduled refreshes as active.
+
+At the latest check:
+- The EventBridge rule `youtube-pipeline-batch-ready` is **DISABLED**.
+- The raw S3 bucket EventBridge notification configuration is empty.
+- The scheduled dashboard refresh workflow is not active; its file is retained only under `docs/disabled-workflows/`.
+- The JSON-reference Lambda reserved concurrency is **0**.
+- The Step Functions state machine and its successful execution history are retained. No execution was running at the latest check.
+- GitHub Pages is enabled. The dashboard publish workflow completed successfully for commit `ddf4301414a35216aa8f0951ddf3648aebc605c8`.
+
+The successful pipeline runs and query results recorded below remain historical evidence. They do not mean that automatic execution is currently enabled. Do not upload a marker expecting a run, and do not describe the dashboard as automatically refreshing.
+
+---
+
 # AWS Verification Record
 
 This file records evidence gathered from the connected AWS environment. Treat it as a snapshot, not a live status page. Re-run checks before deployment or a CV claim.
