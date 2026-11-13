@@ -12,7 +12,7 @@ The Step Functions workflow `youtube-trending-end-to-end` orchestrates the proje
 6. Writes safe and quarantine outputs to separate run-partitioned S3 prefixes.
 7. Runs separate crawlers to register safe and quarantine partitions in Glue Data Catalog.
 
-The original raw, tutorial staging, and v2 curated outputs are preserved. The automated jobs use new S3 prefixes and unique `run_id` partitions. They do not use append mode or overwrite existing runs.
+The original raw, tutorial staging, and v2 curated outputs are preserved. The automated jobs use unique `run_id` partitions and append only after checking that the run-specific output prefix is empty. Reusing a run ID is rejected, and previous runs are never overwritten.
 
 ## AWS resources
 
