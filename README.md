@@ -2,7 +2,7 @@
 
 A portfolio project exploring batch data engineering on AWS using the Kaggle YouTube Trending Videos dataset. The repository preserves the Glue scripts captured from the AWS environment and documents the verified state of the pipeline, its known defects, and the recovery plan.
 
-> **Current state:** The original tutorial data and jobs are preserved. A repeatable AWS Step Functions workflow now orchestrates new run-isolated staging, quality curation, quarantine and Glue Catalog registration. The earlier v2 curated snapshot remains verified at 359,936 safe rows. See [the orchestration runbook](docs/end-to-end-orchestration.md), [the dashboard](docs/dashboard/index.html), and [the AWS verification record](docs/verified-aws-state.md).
+> **Current state:** The original tutorial data and jobs are preserved. An S3/EventBridge batch-ready trigger now starts a repeatable AWS Step Functions workflow for run-isolated staging, quality curation, quarantine and Glue Catalog registration. A live marker test completed successfully; the latest run passed independent Athena quality checks. The earlier v2 curated snapshot remains verified at 359,936 safe rows. See [the orchestration runbook](docs/end-to-end-orchestration.md), [the dashboard](docs/dashboard/index.html), and [the AWS verification record](docs/verified-aws-state.md).
 
 ## Project goals
 
@@ -50,7 +50,7 @@ Kaggle YouTube Trending CSVs + category JSON
        SQL analysis / BI-ready outputs
 ```
 
-This diagram describes the intended flow from the scripts and AWS resources inspected. It does **not** imply that all jobs are orchestrated, that every job currently succeeds, or that a QuickSight dashboard is part of this repository.
+The automated path implemented in AWS is the run-isolated CSV staging → Glue Catalog registration → quality curation → safe/quarantine catalog registration flow. It starts when a unique `.ready` marker is uploaded after all 10 regional CSV files are present. The original tutorial jobs remain in the account as preserved reference assets and are not all part of this automated path. QuickSight is not enabled; the repository includes a static interactive HTML dashboard snapshot.
 
 ## AWS services and tools
 
