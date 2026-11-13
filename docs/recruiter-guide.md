@@ -1,68 +1,79 @@
-# Recruiter and interview guide
+# Project notes for interviews
 
-## Project in one line
+## Short description
 
-Built and tested an AWS batch data pipeline for YouTube Trending Videos data across 10 regions, with PySpark transformations, data-quality quarantine, Athena analytics and an interactive dashboard snapshot.
+I built a batch pipeline around the public Kaggle YouTube Trending Videos dataset. It uses S3, Glue and PySpark to process regional CSV files, checks data quality, stores accepted and rejected records separately, and makes the accepted data available for Athena queries. I also made a small HTML dashboard from the query results.
 
-## Resume entry
+## CV entry
 
-**YouTube Trending Videos — End-to-End Data Engineering Pipeline**  
-*AWS S3, AWS Glue, PySpark, Glue Data Catalog, Athena, SQL, Python, GitHub Actions*
+**YouTube Trending Data Pipeline**  
+*AWS S3, AWS Glue, PySpark, Glue Data Catalog, Athena, SQL, Python*
 
-- Built and tested an AWS batch pipeline to process YouTube trending-video data across 10 regions, transforming raw CSVs into analytics-ready Parquet with S3, Glue and PySpark.
-- Implemented data-quality controls for invalid IDs, exact duplicates and conflicting business keys, separating accepted records from quarantined records; validated 359,936 safe records with zero duplicate business-key groups.
-- Developed Athena SQL analysis for regional KPIs, category performance and top videos, and built an interactive HTML dashboard backed by a documented data snapshot.
+- Processed YouTube trending-video CSV data from 10 regions with AWS Glue and PySpark, writing the transformed data to Parquet in S3.
+- Added checks for invalid video IDs, exact duplicates and conflicting business keys; separated rejected records into a quarantine dataset.
+- Queried the curated data with Athena and built an HTML dashboard showing regional and category metrics.
 
-**Accuracy note:** The pipeline's orchestration was successfully tested, but automatic AWS triggers and scheduled refreshes are currently paused to control cloud usage. Describe this as a tested pipeline, not a continuously running production service.
+The latest validated run produced 359,936 accepted rows, with zero duplicate business-key groups in the accepted output.
 
-## 60-second explanation
+## How to explain it
 
-“I built an end-to-end batch data engineering project using the Kaggle YouTube Trending dataset. The raw regional CSV files are stored in Amazon S3. I used AWS Glue and PySpark to apply a defined schema and convert the data into Parquet. A curation stage then checks data quality: it rejects invalid video IDs, removes exact duplicate rows, and quarantines records where the same region, video ID and trending date have conflicting values. The accepted and rejected datasets are stored separately and registered in the Glue Data Catalog. I used Athena SQL to analyse regional performance, category performance and top videos, then presented the results in an interactive dashboard. The key learning was that data quality is not just removing nulls; choosing a business key and preserving conflicting records for audit are equally important. I tested the end-to-end orchestration and paused automatic triggers afterwards to avoid unnecessary AWS costs.”
+Use this as a reminder of the order of the work, not as a script to memorise:
 
-## Architecture walkthrough
+1. The source was the public Kaggle YouTube Trending Videos dataset, split into regional CSV files.
+2. I stored the files in S3 and used Glue/PySpark to read them with a defined schema and write Parquet.
+3. I checked the data before using it for analysis. The source included literal `#NAME?` values in `video_id`, exact duplicate rows and cases where the same business key had different record values.
+4. I used `(region, video_id, trending_date)` as the business key. Exact duplicates were removed. Where records with the same key disagreed, I kept them in quarantine instead of picking a winner.
+5. The accepted and quarantine datasets were registered in the Glue Data Catalog. I used Athena SQL for the analysis and built a dashboard from the query output.
 
-1. **Raw layer — S3:** source CSV files are organised by region.
-2. **Staging — Glue/PySpark:** reads CSVs with an explicit schema and writes Snappy Parquet into run-specific partitions.
-3. **Catalog — Glue Data Catalog:** crawlers register the staging and curated partitions so Athena can query them.
-4. **Curation — Glue/PySpark:** validates IDs, removes exact duplicates and quarantines conflicting business-key records.
-5. **Analytics — Athena SQL:** computes regional KPIs, category performance and top-video summaries.
-6. **Presentation — HTML/JSON:** the dashboard renders a committed snapshot; it does not query AWS in the browser.
+Be ready to explain what each stage does and why you made those data-quality decisions. It is better to describe one part clearly than to recite a polished answer.
 
-## Useful technical questions
+## Results to know
 
-**Why Parquet instead of CSV?**  
-Parquet is columnar and compressed, so analytical queries can read only required columns and generally scan less data.
+| Measure | Result |
+|---|---:|
+| Rows read into staging | 375,942 |
+| Regions | 10 |
+| Accepted rows | 359,936 |
+| Unique video IDs in accepted data | 184,180 |
+| Invalid-ID rows quarantined | 2,312 |
+| Conflicting rows quarantined | 1,298 |
+| Conflicting business-key groups | 649 |
+| Duplicate business-key groups in accepted data | 0 |
 
-**Why use both a safe and quarantine dataset?**  
-It keeps bad or ambiguous records visible for investigation instead of silently deleting them, while protecting downstream analysis.
+## Questions you may be asked
+
+**Why did you use Parquet?**  
+It is a columnar format that supports compression and lets analytical queries read only the columns they need.
 
 **What is the business key?**  
-`(region, video_id, trending_date)`. Two records can share that key but differ in other fields; those conflicts are not safe to resolve by arbitrarily keeping one.
+`(region, video_id, trending_date)`. A video can trend in more than one region or on more than one date, so the region and date are part of the key.
 
-**What was the main data-quality issue?**  
-The source included 2,312 literal `#NAME?` values in `video_id`, plus conflicting variants for 649 business-key groups. The latest quarantine snapshot recorded 1,298 conflicting rows.
+**Why quarantine conflicting records?**  
+If two rows have the same key but disagree on other fields, choosing one without a rule could hide a data issue. Quarantine keeps the records available for investigation.
 
-**How did you validate the result?**  
-I used Athena checks to confirm 359,936 safe rows across 10 regions, zero invalid IDs and zero duplicate business-key groups in the safe output.
+**What did you find in the source data?**  
+There were 2,312 literal `#NAME?` values in the video ID field and 649 business-key groups with conflicting variants. The curation output retained 1,298 rows from those conflicting groups in quarantine.
 
-**Why Step Functions?**  
-It coordinates the Glue jobs and crawler stages in a defined order, passing a unique run ID so outputs are isolated and earlier runs are preserved.
+**How did you check the result?**  
+I queried the outputs in Athena. The latest run had 359,936 accepted rows across 10 regions and no duplicate business-key groups in the accepted data.
 
-**Is it live or continuously running?**  
-No. It is a tested batch pipeline using a historical Kaggle dataset. Automatic triggers and scheduled dashboard refreshes are intentionally paused to control cloud costs. The dashboard is a static snapshot.
+**Is the pipeline live?**  
+No. It is a tested batch pipeline using a historical dataset. The AWS workflow completed successful executions, but automatic triggers and scheduled dashboard refreshes are paused to control costs. The dashboard is a static snapshot.
 
-**What would you improve next?**  
-Add CI tests against representative input fixtures, stronger text-encoding normalisation, a controlled manual refresh procedure and alerting for failed runs. Any production schedule would need a clear cost budget and monitoring.
+**What would you improve?**  
+I would improve text encoding, add automated tests with sample input files, and make the refresh process easier to run and verify without leaving AWS services running unnecessarily.
 
-## Evidence links
+## Be accurate about the scope
 
-- [GitHub repository](https://github.com/krishnasai-gorantla/youtube-trending-data-pipeline)
-- [Dashboard HTML source](dashboard/index.html)
-- [Dashboard JSON snapshot](dashboard/data.json)
-- [AWS verification record](verified-aws-state.md)
-- [End-to-end orchestration runbook](end-to-end-orchestration.md)
-- [Athena SQL scripts](../sql/)
+- The dataset is from Kaggle; it is not a live YouTube API feed.
+- The dashboard uses a committed JSON snapshot and does not query AWS in the browser.
+- The top-video table is limited to the records included in the snapshot. It is not a full ranking for every region.
+- Amazon QuickSight is not used in this project.
+- The project was informed by a public AWS tutorial. Be clear about which parts were adapted and which data-quality, orchestration, SQL and dashboard work you implemented.
 
-## Be transparent
+## Links
 
-This is a portfolio project based on a public dataset and informed by a public tutorial. The additional work documented here includes stricter data validation, business-key conflict handling, quarantine outputs, run-isolated orchestration, Athena analytics and the dashboard. Do not present the dashboard as live YouTube data or the AWS workflow as an always-on production service.
+- [Repository](https://github.com/krishnasai-gorantla/youtube-trending-data-pipeline)
+- [Live dashboard](https://krishnasai-gorantla.github.io/youtube-trending-data-pipeline/)
+- [Pipeline run and AWS evidence](verified-aws-state.md)
+- [SQL queries](../sql/)
