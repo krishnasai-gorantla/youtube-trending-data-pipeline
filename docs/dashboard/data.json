@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-13T13:06:47.192000+00:00",
+  "generated_at_utc": "2026-11-13T15:30:00Z",
   "run_id": "72af6f39-6a91-4c80-954e-1d9a1830a588",
   "execution_arn": "arn:aws:states:us-east-1:303102153405:execution:youtube-trending-end-to-end:8ddefb0c-332e-f8bc-fc31-f048315eafd6_19f8e221-332a-cc52-7905-5b1977ca6d14",
   "quality": {
@@ -217,6 +217,246 @@
   ],
   "videos": [
     {
+      "region": "ca",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 137843120,
+      "likes": 3014479
+    },
+    {
+      "region": "ca",
+      "id": "VYOjWnS4cMY",
+      "title": "Childish Gambino - This Is America (Official Video)",
+      "channel": "ChildishGambinoVEVO",
+      "views": 98938809,
+      "likes": 3037318
+    },
+    {
+      "region": "ca",
+      "id": "6ZfuNTqbHE8",
+      "title": "Marvel Studios' Avengers: Infinity War Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 89930713,
+      "likes": 2606665
+    },
+    {
+      "region": "ca",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 80738011,
+      "likes": 5053338
+    },
+    {
+      "region": "ca",
+      "id": "_I_D_8Z4sJE",
+      "title": "Nicky Jam x J. Balvin - X (EQUIS) | Video Oficial | Prod. Afro Bros & Jeon",
+      "channel": "NickyJamTV",
+      "views": 61163906,
+      "likes": 629164
+    },
+    {
+      "region": "ca",
+      "id": "TyHvyGVs42U",
+      "title": "Luis Fonsi, Demi Lovato - Ãchame La Culpa",
+      "channel": "LuisFonsiVEVO",
+      "views": 56843038,
+      "likes": 1904853
+    },
+    {
+      "region": "ca",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 53071887,
+      "likes": 1243479
+    },
+    {
+      "region": "ca",
+      "id": "BhIEIO0vaBE",
+      "title": "To Our Daughter",
+      "channel": "Kylie Jenner",
+      "views": 51243149,
+      "likes": 0
+    },
+    {
+      "region": "ca",
+      "id": "aJOTlE1K90k",
+      "title": "Maroon 5 - Girls Like You ft. Cardi B",
+      "channel": "Maroon5VEVO",
+      "views": 47778378,
+      "likes": 2178332
+    },
+    {
+      "region": "ca",
+      "id": "xpVfcZ0ZcFM",
+      "title": "Drake - Godâs Plan",
+      "channel": "DrakeVEVO",
+      "views": 47362934,
+      "likes": 2469057
+    },
+    {
+      "region": "de",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 113876217,
+      "likes": 2811217
+    },
+    {
+      "region": "de",
+      "id": "6ZfuNTqbHE8",
+      "title": "Marvel Studios' Avengers: Infinity War Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 80360459,
+      "likes": 2513103
+    },
+    {
+      "region": "de",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 73463137,
+      "likes": 4924056
+    },
+    {
+      "region": "de",
+      "id": "VYOjWnS4cMY",
+      "title": "Childish Gambino - This Is America (Official Video)",
+      "channel": "ChildishGambinoVEVO",
+      "views": 73432600,
+      "likes": 2478908
+    },
+    {
+      "region": "de",
+      "id": "_I_D_8Z4sJE",
+      "title": "Nicky Jam x J. Balvin - X (EQUIS) | Video Oficial | Prod. Afro Bros & Jeon",
+      "channel": "NickyJamTV",
+      "views": 50896717,
+      "likes": 550476
+    },
+    {
+      "region": "de",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 49185287,
+      "likes": 1204863
+    },
+    {
+      "region": "de",
+      "id": "BhIEIO0vaBE",
+      "title": "To Our Daughter",
+      "channel": "Kylie Jenner",
+      "views": 48635732,
+      "likes": 0
+    },
+    {
+      "region": "de",
+      "id": "-BQJo3vK8O8",
+      "title": "Maluma - El PrÃ©stamo (Official Video)",
+      "channel": "MalumaVEVO",
+      "views": 44725448,
+      "likes": 575878
+    },
+    {
+      "region": "de",
+      "id": "QwievZ1Tx-8",
+      "title": "Marvel Studios' Avengers: Infinity War - Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 42862117,
+      "likes": 1465000
+    },
+    {
+      "region": "de",
+      "id": "ffxKSjUwKdU",
+      "title": "Ariana Grande - No Tears Left To Cry",
+      "channel": "ArianaGrandeVevo",
+      "views": 39530559,
+      "likes": 2068564
+    },
+    {
+      "region": "fr",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 100911567,
+      "likes": 2656682
+    },
+    {
+      "region": "fr",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 65396157,
+      "likes": 4750254
+    },
+    {
+      "region": "fr",
+      "id": "VYOjWnS4cMY",
+      "title": "Childish Gambino - This Is America (Official Video)",
+      "channel": "ChildishGambinoVEVO",
+      "views": 60776509,
+      "likes": 2183745
+    },
+    {
+      "region": "fr",
+      "id": "TyHvyGVs42U",
+      "title": "Luis Fonsi, Demi Lovato - Ãchame La Culpa",
+      "channel": "LuisFonsiVEVO",
+      "views": 47078714,
+      "likes": 1763400
+    },
+    {
+      "region": "fr",
+      "id": "BhIEIO0vaBE",
+      "title": "To Our Daughter",
+      "channel": "Kylie Jenner",
+      "views": 44818108,
+      "likes": 0
+    },
+    {
+      "region": "fr",
+      "id": "_I_D_8Z4sJE",
+      "title": "Nicky Jam x J. Balvin - X (EQUIS) | Video Oficial | Prod. Afro Bros & Jeon",
+      "channel": "NickyJamTV",
+      "views": 40567774,
+      "likes": 448371
+    },
+    {
+      "region": "fr",
+      "id": "QwievZ1Tx-8",
+      "title": "Marvel Studios' Avengers: Infinity War - Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 39980116,
+      "likes": 1420090
+    },
+    {
+      "region": "fr",
+      "id": "LsoLEjrDogU",
+      "title": "Bruno Mars - Finesse (Remix) [Feat. Cardi B] [Official Video]",
+      "channel": "Bruno Mars",
+      "views": 37728802,
+      "likes": 1629948
+    },
+    {
+      "region": "fr",
+      "id": "dfnCAmr569k",
+      "title": "Taylor Swift - End Game ft. Ed Sheeran, Future",
+      "channel": "TaylorSwiftVEVO",
+      "views": 34708457,
+      "likes": 1681449
+    },
+    {
+      "region": "fr",
+      "id": "2Vv-BfVoq4g",
+      "title": "Ed Sheeran - Perfect (Official Music Video)",
+      "channel": "Ed Sheeran",
+      "views": 33523622,
+      "likes": 1634134
+    },
+    {
       "region": "gb",
       "id": "_I_D_8Z4sJE",
       "title": "Nicky Jam x J. Balvin - X (EQUIS) | Video Oficial | Prod. Afro Bros & Jeon",
@@ -265,14 +505,6 @@
       "likes": 4737873
     },
     {
-      "region": "us",
-      "id": "VYOjWnS4cMY",
-      "title": "Childish Gambino - This Is America (Official Video)",
-      "channel": "ChildishGambinoVEVO",
-      "views": 225211923,
-      "likes": 5023450
-    },
-    {
       "region": "gb",
       "id": "ffxKSjUwKdU",
       "title": "Ariana Grande - No Tears Left To Cry",
@@ -295,6 +527,495 @@
       "channel": "YouTube Spotlight",
       "views": 169884583,
       "likes": 3312868
+    },
+    {
+      "region": "gb",
+      "id": "sGIm0-dQd8M",
+      "title": "Dura - Daddy Yankee (Video Oficial)",
+      "channel": "Daddy Yankee",
+      "views": 167456025,
+      "likes": 1633407
+    },
+    {
+      "region": "in",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 125432237,
+      "likes": 2912710
+    },
+    {
+      "region": "in",
+      "id": "6ZfuNTqbHE8",
+      "title": "Marvel Studios' Avengers: Infinity War Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 89930713,
+      "likes": 2606663
+    },
+    {
+      "region": "in",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 53822757,
+      "likes": 1250535
+    },
+    {
+      "region": "in",
+      "id": "QwievZ1Tx-8",
+      "title": "Marvel Studios' Avengers: Infinity War - Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 45064699,
+      "likes": 1494997
+    },
+    {
+      "region": "in",
+      "id": "rRr1qiJRsXk",
+      "title": "Sanju | Official Teaser | Ranbir Kapoor | Rajkumar Hirani",
+      "channel": "FoxStarHindi",
+      "views": 44171797,
+      "likes": 780895
+    },
+    {
+      "region": "in",
+      "id": "tCXGJQYZ9JA",
+      "title": "Taylor Swift - Delicate",
+      "channel": "TaylorSwiftVEVO",
+      "views": 43738208,
+      "likes": 1658756
+    },
+    {
+      "region": "in",
+      "id": "dfnCAmr569k",
+      "title": "Taylor Swift - End Game ft. Ed Sheeran, Future",
+      "channel": "TaylorSwiftVEVO",
+      "views": 42019590,
+      "likes": 1804377
+    },
+    {
+      "region": "in",
+      "id": "xmU0s2QtaEY",
+      "title": "Swag Se Swagat Song | Tiger Zinda Hai | Salman Khan | Katrina Kaif",
+      "channel": "YRF",
+      "views": 40953758,
+      "likes": 679940
+    },
+    {
+      "region": "in",
+      "id": "2Vv-BfVoq4g",
+      "title": "Ed Sheeran - Perfect (Official Music Video)",
+      "channel": "Ed Sheeran",
+      "views": 39082222,
+      "likes": 1721384
+    },
+    {
+      "region": "in",
+      "id": "ePO5M5DE01I",
+      "title": "Tiger Zinda Hai | Official Trailer | Salman Khan | Katrina Kaif",
+      "channel": "YRF",
+      "views": 38664360,
+      "likes": 865914
+    },
+    {
+      "region": "jp",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 62796390,
+      "likes": 4470923
+    },
+    {
+      "region": "jp",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 39128403,
+      "likes": 1077732
+    },
+    {
+      "region": "jp",
+      "id": "QwievZ1Tx-8",
+      "title": "Marvel Studios' Avengers: Infinity War - Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 30180849,
+      "likes": 1242239
+    },
+    {
+      "region": "jp",
+      "id": "9TUBf6l7FBg",
+      "title": "Coachella 2018 LIVE Channel 1",
+      "channel": "Coachella",
+      "views": 24004779,
+      "likes": 0
+    },
+    {
+      "region": "jp",
+      "id": "rRr1qiJRsXk",
+      "title": "Sanju | Official Teaser | Ranbir Kapoor | Rajkumar Hirani",
+      "channel": "FoxStarHindi",
+      "views": 18639195,
+      "likes": 511791
+    },
+    {
+      "region": "jp",
+      "id": "TIE92mUvSsw",
+      "title": "Dhadak | Official Trailer | Janhvi & Ishaan | Shashank Khaitan | Karan Johar",
+      "channel": "Dharma Productions",
+      "views": 15969920,
+      "likes": 308382
+    },
+    {
+      "region": "jp",
+      "id": "p8npDG2ulKQ",
+      "title": "BTS (ë°©íìëë¨) LOVE YOURSELF è½ Tear 'Singularity' Comeback Trailer",
+      "channel": "ibighit",
+      "views": 15875379,
+      "likes": 2285436
+    },
+    {
+      "region": "jp",
+      "id": "yDiXQl7grPQ",
+      "title": "Do You Hear Yanny or Laurel? (SOLVED with SCIENCE)",
+      "channel": "AsapSCIENCE",
+      "views": 15006579,
+      "likes": 278752
+    },
+    {
+      "region": "jp",
+      "id": "sS0LCjOiIhc",
+      "title": "GOT7 Look M/V",
+      "channel": "jypentertainment",
+      "views": 13537642,
+      "likes": 806488
+    },
+    {
+      "region": "jp",
+      "id": "pVxOVlm_lE8",
+      "title": "Marvel Studiosâ Avengers: Infinity War - Big Game Spot",
+      "channel": "Marvel Entertainment",
+      "views": 12908071,
+      "likes": 290084
+    },
+    {
+      "region": "kr",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 113876217,
+      "likes": 2811223
+    },
+    {
+      "region": "kr",
+      "id": "6ZfuNTqbHE8",
+      "title": "Marvel Studios' Avengers: Infinity War Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 87450245,
+      "likes": 2584675
+    },
+    {
+      "region": "kr",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 87430865,
+      "likes": 5150839
+    },
+    {
+      "region": "kr",
+      "id": "VYOjWnS4cMY",
+      "title": "Childish Gambino - This Is America (Official Video)",
+      "channel": "ChildishGambinoVEVO",
+      "views": 73432600,
+      "likes": 2478908
+    },
+    {
+      "region": "kr",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 49185287,
+      "likes": 1204868
+    },
+    {
+      "region": "kr",
+      "id": "QwievZ1Tx-8",
+      "title": "Marvel Studios' Avengers: Infinity War - Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 45064699,
+      "likes": 1494998
+    },
+    {
+      "region": "kr",
+      "id": "i0p1bmr0EmE",
+      "title": "TWICE What is Love? M/V",
+      "channel": "jypentertainment",
+      "views": 42267579,
+      "likes": 1141242
+    },
+    {
+      "region": "kr",
+      "id": "rRzxEiBLQCA",
+      "title": "TWICE Heart Shaker M/V",
+      "channel": "jypentertainment",
+      "views": 41088994,
+      "likes": 956939
+    },
+    {
+      "region": "kr",
+      "id": "LsoLEjrDogU",
+      "title": "Bruno Mars - Finesse (Remix) [Feat. Cardi B] [Official Video]",
+      "channel": "Bruno Mars",
+      "views": 37728802,
+      "likes": 1629948
+    },
+    {
+      "region": "kr",
+      "id": "BhIEIO0vaBE",
+      "title": "To Our Daughter",
+      "channel": "Kylie Jenner",
+      "views": 35832484,
+      "likes": 0
+    },
+    {
+      "region": "mx",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 100912384,
+      "likes": 2656698
+    },
+    {
+      "region": "mx",
+      "id": "6ZfuNTqbHE8",
+      "title": "Marvel Studios' Avengers: Infinity War Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 74789251,
+      "likes": 2444976
+    },
+    {
+      "region": "mx",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 62796390,
+      "likes": 4470923
+    },
+    {
+      "region": "mx",
+      "id": "_I_D_8Z4sJE",
+      "title": "Nicky Jam x J. Balvin - X (EQUIS) | Video Oficial | Prod. Afro Bros & Jeon",
+      "channel": "NickyJamTV",
+      "views": 50896717,
+      "likes": 550478
+    },
+    {
+      "region": "mx",
+      "id": "BhIEIO0vaBE",
+      "title": "To Our Daughter",
+      "channel": "Kylie Jenner",
+      "views": 40801423,
+      "likes": 0
+    },
+    {
+      "region": "mx",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 39128403,
+      "likes": 1077733
+    },
+    {
+      "region": "mx",
+      "id": "TyHvyGVs42U",
+      "title": "Luis Fonsi, Demi Lovato - Ãchame La Culpa",
+      "channel": "LuisFonsiVEVO",
+      "views": 38647842,
+      "likes": 1600413
+    },
+    {
+      "region": "mx",
+      "id": "QwievZ1Tx-8",
+      "title": "Marvel Studios' Avengers: Infinity War - Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 36112519,
+      "likes": 1355014
+    },
+    {
+      "region": "mx",
+      "id": "J6-8DQALGt4",
+      "title": "Alexa Loses Her Voice â Amazon Super Bowl LII Commercial",
+      "channel": "amazon",
+      "views": 34448035,
+      "likes": 100710
+    },
+    {
+      "region": "mx",
+      "id": "kLpH1nSLJSs",
+      "title": "Bad Bunny - Amorfoda | Video Oficial",
+      "channel": "Bad Bunny",
+      "views": 32880238,
+      "likes": 1497630
+    },
+    {
+      "region": "ru",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 62796390,
+      "likes": 4470923
+    },
+    {
+      "region": "ru",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 52611730,
+      "likes": 1891836
+    },
+    {
+      "region": "ru",
+      "id": "BhIEIO0vaBE",
+      "title": "To Our Daughter",
+      "channel": "Kylie Jenner",
+      "views": 35832484,
+      "likes": 0
+    },
+    {
+      "region": "ru",
+      "id": "VYOjWnS4cMY",
+      "title": "Childish Gambino - This Is America (Official Video)",
+      "channel": "ChildishGambinoVEVO",
+      "views": 31648454,
+      "likes": 1405392
+    },
+    {
+      "region": "ru",
+      "id": "u9Mv98Gr5pY",
+      "title": "VENOM - Official Trailer (HD)",
+      "channel": "Sony Pictures Entertainment",
+      "views": 27973210,
+      "likes": 850378
+    },
+    {
+      "region": "ru",
+      "id": "tCXGJQYZ9JA",
+      "title": "Taylor Swift - Delicate",
+      "channel": "TaylorSwiftVEVO",
+      "views": 24262331,
+      "likes": 1249412
+    },
+    {
+      "region": "ru",
+      "id": "dfnCAmr569k",
+      "title": "Taylor Swift - End Game ft. Ed Sheeran, Future",
+      "channel": "TaylorSwiftVEVO",
+      "views": 23198594,
+      "likes": 1404648
+    },
+    {
+      "region": "ru",
+      "id": "kTlv5_Bs8aw",
+      "title": "BTS (ë°©íìëë¨) 'MIC Drop (Steve Aoki Remix)' Official MV",
+      "channel": "ibighit",
+      "views": 20565795,
+      "likes": 2320662
+    },
+    {
+      "region": "ru",
+      "id": "84LBjXaeKk4",
+      "title": "Netta - Toy - Israel - LIVE - Grand Final - Eurovision 2018",
+      "channel": "Eurovision Song Contest",
+      "views": 19424479,
+      "likes": 169615
+    },
+    {
+      "region": "ru",
+      "id": "rRr1qiJRsXk",
+      "title": "Sanju | Official Teaser | Ranbir Kapoor | Rajkumar Hirani",
+      "channel": "FoxStarHindi",
+      "views": 18639195,
+      "likes": 511788
+    },
+    {
+      "region": "us",
+      "id": "VYOjWnS4cMY",
+      "title": "Childish Gambino - This Is America (Official Video)",
+      "channel": "ChildishGambinoVEVO",
+      "views": 225211923,
+      "likes": 5023450
+    },
+    {
+      "region": "us",
+      "id": "FlsCjmMhFmw",
+      "title": "YouTube Rewind: The Shape of 2017 | #YouTubeRewind",
+      "channel": "YouTube Spotlight",
+      "views": 149376127,
+      "likes": 3093544
+    },
+    {
+      "region": "us",
+      "id": "ffxKSjUwKdU",
+      "title": "Ariana Grande - No Tears Left To Cry",
+      "channel": "ArianaGrandeVevo",
+      "views": 148689896,
+      "likes": 3094021
+    },
+    {
+      "region": "us",
+      "id": "zEf423kYfqk",
+      "title": "Becky G, Natti Natasha - Sin Pijama (Official Video)",
+      "channel": "BeckyGVEVO",
+      "views": 139334502,
+      "likes": 1425496
+    },
+    {
+      "region": "us",
+      "id": "7C2z4GqqS5E",
+      "title": "BTS (ë°©íìëë¨) 'FAKE LOVE' Official MV",
+      "channel": "ibighit",
+      "views": 123010920,
+      "likes": 5613827
+    },
+    {
+      "region": "us",
+      "id": "M4ZoCHID9GI",
+      "title": "The Weeknd - Call Out My Name (Official Video)",
+      "channel": "TheWeekndVEVO",
+      "views": 122544931,
+      "likes": 1427436
+    },
+    {
+      "region": "us",
+      "id": "TyHvyGVs42U",
+      "title": "Luis Fonsi, Demi Lovato - Ãchame La Culpa",
+      "channel": "LuisFonsiVEVO",
+      "views": 102012605,
+      "likes": 2376636
+    },
+    {
+      "region": "us",
+      "id": "xTlNMmZKwpA",
+      "title": "Cardi B, Bad Bunny & J Balvin - I Like It [Official Music Video]",
+      "channel": "Cardi B",
+      "views": 94254507,
+      "likes": 1816753
+    },
+    {
+      "region": "us",
+      "id": "6ZfuNTqbHE8",
+      "title": "Marvel Studios' Avengers: Infinity War Official Trailer",
+      "channel": "Marvel Entertainment",
+      "views": 91933007,
+      "likes": 2625661
+    },
+    {
+      "region": "us",
+      "id": "-BQJo3vK8O8",
+      "title": "Maluma - El PrÃ©stamo (Official Video)",
+      "channel": "MalumaVEVO",
+      "views": 87264467,
+      "likes": 815369
     }
-  ]
+  ],
+  "top_videos_scope": "top 10 videos per region ranked by peak observed views; likes shown from the same peak-view observation"
 }
