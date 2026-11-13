@@ -1,14 +1,7 @@
 name: Refresh dashboard data
 
 on:
-  schedule:
-    - cron: "17 * * * *"
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/refresh-dashboard-data.yml"
-      - "scripts/refresh_dashboard.py"
 
 permissions:
   contents: write
