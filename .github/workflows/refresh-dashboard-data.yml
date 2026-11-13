@@ -36,7 +36,9 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::303102153405:role/youtube-dashboard-refresh-github-actions
+          role-session-name: github-dashboard-refresh
           aws-region: us-east-1
+          retry-max-attempts: 2
       - name: Refresh dashboard data from latest successful pipeline run
         run: python scripts/refresh_dashboard.py
       - name: Commit dashboard data when changed
