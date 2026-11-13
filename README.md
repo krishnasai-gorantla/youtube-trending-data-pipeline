@@ -1,144 +1,110 @@
-# YouTube Trending Data Pipeline
+# YouTube Trending Data Engineering Pipeline
 
-A portfolio project exploring batch data engineering on AWS using the Kaggle YouTube Trending Videos dataset. The repository preserves the Glue scripts captured from the AWS environment and documents the verified state of the pipeline, its known defects, and the recovery plan.
+An AWS batch data-engineering portfolio project built around the Kaggle YouTube Trending Videos dataset. It demonstrates ingestion, schema-aware transformation, data-quality controls, quarantine handling, catalog registration, SQL analytics and a lightweight interactive dashboard.
 
-> **Current state:** The original tutorial data and jobs are preserved. An S3/EventBridge batch-ready trigger now starts a repeatable AWS Step Functions workflow for run-isolated staging, quality curation, quarantine and Glue Catalog registration. A live marker test completed successfully; the latest run passed independent Athena quality checks. The earlier v2 curated snapshot remains verified at 359,936 safe rows. See [the orchestration runbook](docs/end-to-end-orchestration.md), [the dashboard](docs/dashboard/index.html), and [the AWS verification record](docs/verified-aws-state.md).
+> **Portfolio status (13 November 2026):** The end-to-end AWS pipeline has completed successful test executions and its latest verified snapshot contains **359,936 safe records across 10 regions**. Automatic AWS triggers and scheduled dashboard refreshes are intentionally paused to avoid ongoing cloud usage. Source data, S3 outputs, Glue jobs, Step Functions definition, SQL and the static dashboard snapshot are preserved.
 
-## Project goals
+## What this project demonstrates
 
-- Land multi-region CSV and JSON source files in Amazon S3.
-- Transform raw files into analytics-friendly Parquet using AWS Glue and PySpark.
-- Register datasets in the AWS Glue Data Catalog.
-- Query the datasets with Amazon Athena.
-- Prepare reliable category and regional analysis for a BI dashboard.
+- Ingesting regional CSV data from Amazon S3.
+- Transforming raw data to Snappy Parquet with AWS Glue and PySpark.
+- Applying explicit validation, exact-row deduplication and business-key conflict detection.
+- Separating accepted records from rejected records in safe and quarantine outputs.
+- Registering partitions and tables in the AWS Glue Data Catalog.
+- Querying curated data with Amazon Athena.
+- Building regional, category and top-video analytics and a static interactive HTML dashboard.
+- Designing a run-isolated Step Functions orchestration flow and documenting cloud cost controls.
 
-## Architecture represented by the current implementation
-
-```text
-Kaggle YouTube Trending CSVs + category JSON
-                    |
-                    v
-        Amazon S3 - raw layer
-                    |
-          AWS Glue Crawlers
-                    |
-          Glue Data Catalog
-                    |
-          AWS Glue / PySpark
-             /          \
-            v            v
-    Regional CSV      Category JSON
-    transformation    explode/flatten
-            |            |
-            v            v
-        Amazon S3 - staging Parquet
-                    |
-          Glue Data Catalog
-                    |
-       Glue 5.1 curation + quality checks
-                    |
-          /                 \
-         v                   v
-    Safe curated          Quarantine
-    Parquet output        Parquet output
-          \                 /
-           v               v
-         Glue Data Catalog
-                    |
-              Amazon Athena
-                    |
-       SQL analysis / BI-ready outputs
-```
-
-The automated path implemented in AWS is the run-isolated CSV staging → Glue Catalog registration → quality curation → safe/quarantine catalog registration flow. It starts when a unique `.ready` marker is uploaded after all 10 regional CSV files are present. The original tutorial jobs remain in the account as preserved reference assets and are not all part of this automated path. QuickSight is not enabled; the repository includes a static interactive HTML dashboard snapshot.
-
-## AWS services and tools
-
-| Service / tool | Role in this project |
-|---|---|
-| Amazon S3 | Stores raw CSV/JSON and transformed Parquet |
-| AWS Glue Crawlers | Discover schemas and update catalog tables |
-| AWS Glue Data Catalog | Stores table metadata for ETL and Athena |
-| AWS Glue / PySpark | Performs batch transformations, validation and curation |
-| AWS Lambda | One active JSON/reference-data function exists; its code is not yet captured here |
-| Amazon Athena | Runs SQL directly against S3-backed tables |
-| Amazon QuickSight | Not subscribed; no QuickSight charges. The interactive HTML dashboard is published through GitHub Pages once enabled |
-| AWS Step Functions | Orchestrates the repeatable staging → catalog → curation → safe/quarantine catalog workflow |
-| GitHub | Stores scripts, SQL, documentation and validation checks |
-
-## Repository structure
+## Architecture
 
 ```text
-.
-├── .github/workflows/       # Automated repository checks
-├── docs/                    # Architecture, AWS evidence and recovery plan
-├── notes/                   # Project progress log
-├── scripts/                 # Local repository validation
-├── sql/                     # Athena validation and analysis queries
-├── src/glue/                # Captured AWS Glue scripts
-├── src/lambda/              # Lambda capture notes
-└── tests/                   # Lightweight repository tests
+Kaggle regional CSV files
+          |
+          v
+    Amazon S3 (raw)
+          |
+          v
+AWS Glue + PySpark staging
+          |
+          v
+  Staging Parquet / Catalog
+          |
+          v
+   Data-quality curation
+       /          \
+      v            v
+ Safe Parquet   Quarantine Parquet
+      \            /
+       v          v
+      Glue Data Catalog
+              |
+              v
+        Amazon Athena
+              |
+       SQL analytics
+              |
+              v
+   Interactive HTML dashboard
+   (static, versioned snapshot)
 ```
 
-## Existing Glue scripts
+The implemented Step Functions workflow coordinates staging, catalog registration, curation and separate safe/quarantine catalog registration. It has completed successful test executions. The EventBridge batch-ready rule is currently **DISABLED** and the raw bucket EventBridge notification configuration is empty, so uploading a marker will not start a new run unless the trigger is deliberately reconfigured. This is intentional for cost control.
 
-| Script | What it currently does | Known concern |
-|---|---|---|
-| `src/glue/spark.py` | Reads regional CSVs, derives region from the S3 path, writes Snappy Parquet | Writes in append mode; repeated runs can duplicate data |
-| `src/glue/de-youtube-reference-explode-job.py` | Explodes JSON `items`, selects category fields, writes Parquet | Uses overwrite mode; reruns replace the target prefix |
-| `src/glue/de-youtube-raw-to-cleansed-glue-job.py` | Reads the raw catalog table, applies mappings and a basic data-quality ruleset, writes Parquet | Historical runs failed parsing MX/KR CSV files; output path overlaps the CSV job |
-| `src/glue/de-youtube-statistics-reference-data-job.py` | Reads catalog and Parquet DynamicFrames and applies `gs_flatten` to the catalog frame | Captured code does not use the Parquet frame in the flatten operation or write a result |
-| `src/glue/youtube-tutorial-staging-validation.py` | Reads CSVs using ISO-8859-1 and an explicit schema; writes partitioned staging Parquet | Preserved as the tutorial-compatible staging layer; not the final analytics table |
-| `src/glue/youtube-portfolio-curation-v2.py` | Reads the staging Catalog table, rejects invalid IDs, removes exact duplicates, quarantines conflicting business keys, and writes safe/quarantine Parquet | Successful Glue 5.1 run; outputs are isolated under `curated/youtube_portfolio_v2/` |
+## Verified data-quality snapshot
 
-## Verified data snapshot
+Latest published dashboard snapshot: `docs/dashboard/data.json`.
 
-Athena checks on the staging table returned **375,942 rows across 10 regions**. They also found:
+| Metric | Verified result |
+|---|---:|
+| Staging records | 375,942 |
+| Regions | 10 |
+| Safe curated records | 359,936 |
+| Unique video IDs in safe set | 184,180 |
+| Invalid IDs retained in quarantine | 2,312 |
+| Conflicting rows retained in quarantine | 1,298 |
+| Duplicate business-key groups in safe output | 0 |
 
-- 2,312 literal `#NAME?` values in `video_id`.
-- 12,703 duplicate business-key groups with 13,045 extra rows among valid IDs.
-- 12,396 extra rows were exact duplicates; 649 were conflicting variants across 649 keys.
-- No blank video IDs, blank regions or negative views/likes/dislikes/comment counts were found.
-- The reference table contains 311 rows but only 32 distinct category IDs. A direct category join multiplies rows unless the reference table is deduplicated.
+The business key is `(region, video_id, trending_date)`. Exact duplicate rows are removed. If multiple non-identical records share a business key, all conflicting variants are quarantined rather than selecting one arbitrarily. The reference category lookup must be deduplicated by category ID before joining because the source contains repeated regional copies.
 
-After exact-row deduplication and excluding conflicting business keys, the curation job published 359,936 rows across 10 regions. Athena independently confirmed zero invalid IDs and zero duplicate business keys in the new curated table. The quarantine table contains 2,312 invalid-ID rows and 1,298 conflicting rows (649 conflicting key groups). These are verified observations from Athena, not a claim that the original staging data is already clean. The Glue staging log reported zero malformed CSV rows and zero blank IDs, but a stricter Athena check found 2,312 literal `#NAME?` video IDs. The revised category-performance query executed successfully and returned 99 region/category result rows after filtering invalid IDs, removing exact duplicates and excluding conflicting keys. See [verified-aws-state.md](docs/verified-aws-state.md) for query execution IDs and detailed findings.
+These figures describe the historical dataset snapshot, not live YouTube activity.
 
-## BI and dashboard queries
+## Technology
 
-Three Athena queries are validated against the curated table:
+Amazon S3 · AWS Glue · PySpark · Glue Data Catalog · Amazon Athena · AWS Step Functions · EventBridge · Python · SQL · GitHub Actions · HTML/CSS/JavaScript
 
-- `sql/06_region_dashboard_kpis.sql` — regional observations, unique videos, observed views and engagement rate.
-- `sql/07_category_dashboard_performance.sql` — regional category comparisons with a deduplicated category lookup.
-- `sql/08_top_videos.sql` — top videos by peak observed views within each region.
-- `sql/09_pipeline_region_kpis.sql`, `sql/10_pipeline_category_performance.sql`, and `sql/11_pipeline_top_videos.sql` — equivalent analysis against a specific run of the new automated pipeline; replace `<RUN_ID>` with the Step Functions run ID.
+Amazon QuickSight is not part of this implementation; no QuickSight subscription was created. The dashboard is a static HTML application backed by a committed JSON snapshot.
 
-The metric definitions and query grain are in [dashboard-data-model.md](docs/dashboard-data-model.md). The AWS account is not currently subscribed to QuickSight, so there is no deployed QuickSight dashboard. The tested Athena outputs are ready to connect to Power BI or another BI tool.
-## Run the automated AWS pipeline
+## Explore the project
 
-The pipeline is event-driven from an explicit batch-ready marker. Upload all 10 regional CSVs to the raw S3 prefix, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready` to the same raw bucket. S3 EventBridge starts `youtube-trending-end-to-end`, which generates a run ID and runs both Glue jobs plus the three catalog crawlers. Use a new marker key per batch; duplicate S3/EventBridge deliveries can start duplicate executions. For manual recovery, start the state machine with `{}`. Each execution writes to a new partitioned output and preserves earlier runs. Full details: [end-to-end orchestration](docs/end-to-end-orchestration.md).
+- [Interactive dashboard source](docs/dashboard/index.html) — open locally or use GitHub Pages after enabling it.
+- [Dashboard data snapshot](docs/dashboard/data.json)
+- [End-to-end architecture and runbook](docs/end-to-end-orchestration.md)
+- [Verified AWS state and execution evidence](docs/verified-aws-state.md)
+- [Recruiter and interview guide](docs/recruiter-guide.md)
+- [Dashboard hosting instructions](docs/dashboard/README.md)
+- [Athena SQL](sql/)
 
-## Run local checks
+## Run the dashboard locally
 
-The Glue scripts require the AWS Glue runtime and cannot be executed as ordinary local Python programs. The repository checks validate Python syntax and project structure without connecting to AWS.
+From the repository root:
 
 ```bash
-python3 -m unittest discover -s tests -v
-python3 -m compileall -q src/glue tests
+python -m http.server 8000
 ```
 
-## Safety and reproducibility
+Open `http://localhost:8000/docs/dashboard/`. The page includes a fallback snapshot for browsers that restrict local JSON loading.
 
-- Do not rerun the append-mode job against the existing `youtube/` prefix until the duplicate-handling strategy is confirmed.
-- Do not overwrite the current S3 datasets. The v2 curation outputs are isolated in a separate versioned prefix; its writes use `errorifexists`.
-- Do not broaden IAM policies just to make a job pass. Identify the exact bucket/prefix and grant only the required actions.
-- Keep credentials, `.env` files, raw datasets, generated Parquet, and unredacted logs out of Git.
-- The AWS resource names in the captured scripts are environment-specific. Replace them with configuration parameters before sharing a reusable deployment.
-- A successful syntax check does not prove that an AWS Glue job will run successfully.
+## Cost-conscious operating status
 
-## References
+No recurring dashboard refresh workflow is active. The former hourly workflow has been removed from `.github/workflows/` and retained as a disabled archive under `docs/disabled-workflows/`. The EventBridge trigger is disabled, the raw S3 EventBridge notification configuration is empty, and the JSON-reference Lambda has reserved concurrency set to zero. Do not start Glue jobs, Athena queries or Step Functions executions unless you intend to incur usage-based charges. AWS credits are not a hard spending cap.
 
-- [Darshil Parmar's original YouTube Analytics project write-up](https://medium.com/@darshilp/end-to-end-data-engineering-project-youtube-analytics-1c7eebf0d31)
-- [Related public project repository](https://github.com/darshilparmar/youtube-data-piepline-aws-s3-lambda-glue-athena-stepfunction)
-- Dataset: [Trending YouTube Video Statistics](https://www.kaggle.com/datasets/datasnaek/youtube-new) — confirm the dataset's current licence and terms before redistributing data.
+## Known limitations
 
-This repository is an independently maintained learning implementation. It is not affiliated with or endorsed by the tutorial author.
+- The source is a historical Kaggle dataset; the dashboard is not live.
+- Some source titles contain character-encoding artefacts; numeric metrics and quality checks were validated separately.
+- The pipeline is preserved and tested, but automatic execution is paused.
+- GitHub Pages is not yet confirmed as enabled. Follow the dashboard hosting instructions to publish a public rendered dashboard URL.
+
+## Attribution
+
+The project was developed as a learning portfolio using the public Kaggle YouTube Trending Videos dataset and was informed by a public AWS data-engineering tutorial. The repository documents the additional validation, quarantine, run-isolation, SQL analytics and dashboard work completed here.
