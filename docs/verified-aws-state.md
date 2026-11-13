@@ -35,10 +35,42 @@ All three crawlers finished in READY state with `LastCrawl.Status=SUCCEEDED`. To
 
 The safe output is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/safe/`; quarantine is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/quarantine/`. Glue Catalog tables are `db_youtube_cleaned.youtube_pipeline_safe` and `db_youtube_cleaned.youtube_pipeline_quarantine`. The run-scoped Athena templates are `sql/09` through `sql/11`.
 
-**Trigger and dashboard status:** S3 EventBridge notifications are enabled on the raw bucket. The enabled rule `youtube-pipeline-batch-ready` matches `pipeline_triggers/*.ready` object-created events and targets the Step Functions state machine through a dedicated role with `states:StartExecution` only. The event pattern passed `TestEventPattern`; the trigger has not been fired with a live marker because doing so would launch another paid Glue run. To start a future batch automatically, upload all 10 regional CSVs first, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready`. Use a new key per batch; S3/EventBridge delivery is at-least-once, so duplicate marker notifications can create duplicate executions. Manual execution with `{}` remains available for recovery.
+**Trigger and dashboard status:** S3 EventBridge notifications are enabled on the raw bucket. The enabled rule `youtube-pipeline-batch-ready` matches `pipeline_triggers/*.ready` object-created events and targets the Step Functions state machine through a dedicated role with `states:StartExecution` only. The event pattern passed `TestEventPattern`; the trigger has now been fired with a controlled test marker and the retry completed successfully (see the latest rerun evidence above). To start a future batch automatically, upload all 10 regional CSVs first, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready`. Use a new key per batch; S3/EventBridge delivery is at-least-once, so duplicate marker notifications can create duplicate executions. Manual execution with `{}` remains available for recovery.
 
-The HTML dashboard snapshot in `docs/dashboard/index.html` reflects this successful run; it is not a live AWS connection. GitHub Pages deployment is prepared in Actions, but the first deployment failed with GitHub's 404 because Pages has not yet been enabled for this repository. The Pages artifact uploaded successfully. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**, then rerun the `Publish dashboard` workflow. QuickSight remains unsubscribed, with no subscription enabled.
+The HTML dashboard snapshot in `docs/dashboard/index.html` reflects the latest successful run `72af6f39-6a91-4c80-954e-1d9a1830a588`; it is not a live AWS connection. GitHub Pages deployment is prepared in Actions, but the first deployment failed with GitHub's 404 because Pages has not yet been enabled for this repository. The Pages artifact uploaded successfully. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**, then rerun the `Publish dashboard` workflow. QuickSight remains unsubscribed, with no subscription enabled.
 
+
+## Latest end-to-end rerun — 13 November 2026
+
+The S3/EventBridge trigger was exercised with a test batch-ready marker. The first trigger attempt exposed a Spark output-path collision: Spark rejected the existing dataset root even though the new run ID was unique. The Glue jobs were corrected to append only into a previously empty run-specific partition and to reject reuse of a populated run ID. The retry then completed successfully end to end.
+
+- Marker: `s3://de-youtube-raw-useast1-krishna-2026/pipeline_triggers/verification-2026-11-13-retry.ready`
+- EventBridge rule: `youtube-pipeline-batch-ready`
+- Step Functions execution: `arn:aws:states:us-east-1:303102153405:execution:youtube-trending-end-to-end:8ddefb0c-332e-f8bc-fc31-f048315eafd6_19f8e221-332a-cc52-7905-5b1977ca6d14`
+- Execution: **SUCCEEDED**, 13 Nov 2026 12:51:53–13:06:47 UTC
+- Run ID: `72af6f39-6a91-4c80-954e-1d9a1830a588`
+
+| Stage | Resource | Result |
+|---|---|---|
+| Raw CSV staging | `youtube-pipeline-staging-v1` | SUCCEEDED; 97 seconds; 194 DPU-seconds |
+| Staging catalog | `youtube-pipeline-staging-crawler` | SUCCEEDED; crawler returned to READY |
+| Curation and quarantine | `youtube-pipeline-curation-v1` | SUCCEEDED; 229 seconds; 458 DPU-seconds |
+| Safe catalog | `youtube-pipeline-safe-crawler` | SUCCEEDED; crawler returned to READY |
+| Quarantine catalog | `youtube-pipeline-quarantine-crawler` | SUCCEEDED; crawler returned to READY |
+
+Total Glue compute for this run was 652 DPU-seconds (194 + 458). This test used the same source CSV batch, so the row counts and dashboard metrics are expected to match the prior successful run. It verifies that a fresh run ID can publish a second isolated set of partitions without overwriting the earlier run.
+
+**Independent Athena validation for this run:**
+
+| Validation | Result | Query execution ID |
+|---|---:|---|
+| Safe rows / regions / invalid IDs / unique videos | 359,936 / 10 / 0 / 184,180 | `df03422c-775b-4ac9-8e25-bd6bdd297554` |
+| Duplicate business-key groups in safe output | 0 | `2054a6f1-c752-43ee-8ad3-c97920a3e553` |
+| Quarantine | 2,312 invalid IDs; 1,298 conflicting rows | `ed427d47-6a8e-421c-9947-3463cfee75f4` |
+| Regional KPIs | 10 regional rows | `c97c8165-597b-410b-8387-e579251783bd` |
+| Top videos | 10 rows | `035e2699-dc67-4d22-81c7-788be08e1ef5` |
+
+The dashboard snapshot was refreshed to this latest run ID. Regional metrics match the previous successful execution because the underlying source batch did not change.
 
 ## AWS resource inventory
 
@@ -66,8 +98,9 @@ The Glue API inspection returned the following evidence:
 | `de-youtube-raw-to-cleansed-glue-job` | Latest returned runs: FAILED (8 Sep 2026) | Errors identify `MXvideos.csv` and `KRvideos.csv` as files that could not be parsed |
 | `youtube-tutorial-staging-validation` | SUCCEEDED (17 Oct 2026) | Uses explicit schema and ISO-8859-1 encoding; writes partitioned Parquet to a separate staging prefix |
 | `youtube-portfolio-curation-v2` | SUCCEEDED (12 Nov 2026) | 216 seconds, 433 DPU-seconds; writes safe and quarantine Parquet to a new isolated prefix |
-| `youtube-pipeline-staging-v1` | SUCCEEDED (13 Nov 2026) | 136 seconds, 272 DPU-seconds; writes unique run_id/region partitions |
-| `youtube-pipeline-curation-v1` | SUCCEEDED (13 Nov 2026) | 209 seconds, 419 DPU-seconds; run-scoped safe/quarantine outputs with quality assertions |
+| `youtube-pipeline-staging-v1` | SUCCEEDED (13 Nov 2026) | Initial run: 136 seconds / 272 DPU-seconds; latest triggered rerun: 97 seconds / 194 DPU-seconds |
+
+| `youtube-pipeline-curation-v1` | SUCCEEDED (13 Nov 2026) | Initial run: 209 seconds / 419 DPU-seconds; latest triggered rerun: 229 seconds / 458 DPU-seconds |
 
 The API request for most jobs was limited to the latest five returned records. This is not a complete historical audit.
 
