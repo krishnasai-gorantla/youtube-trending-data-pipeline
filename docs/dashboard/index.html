@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YouTube Trending Analytics</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c30;--line:#26334d;--muted:#a9b6cb;--ink:#eef4ff;--accent:#64d5c2;--accent2:#8ca8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0%,#172744 0,transparent 42%),var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1240px;margin:auto;padding:38px 22px 60px}.eyebrow{color:var(--accent);font-weight:700;letter-spacing:.13em;text-transform:uppercase;font-size:11px}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.05;margin:10px 0 12px;letter-spacing:-.04em}.sub{color:var(--muted);max-width:760px;margin:0 0 26px}
+.meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-bottom:24px}.pill{border:1px solid var(--line);padding:5px 10px;border-radius:99px}
+.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.panel{background:linear-gradient(150deg,#17233a,#111a2c);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}.kpi-label{color:var(--muted);font-size:12px}.kpi{font-size:clamp(22px,3vw,32px);font-weight:750;letter-spacing:-.04em;margin-top:5px}.kpi-note{color:var(--muted);font-size:11px;margin-top:2px}
+.two{grid-template-columns:1.2fr .8fr;margin-bottom:16px}.section-title{font-size:17px;margin:0 0 3px}.section-note{color:var(--muted);font-size:12px;margin:0 0 16px}
+.chart{width:100%;height:auto;display:block;overflow:visible}.barrow{display:grid;grid-template-columns:34px minmax(0,1fr) 90px;gap:10px;align-items:center;margin:12px 0;font-size:12px}.bar-bg{height:11px;border-radius:99px;background:#26344c;overflow:hidden}.bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),var(--accent))}.bar-value{text-align:right;color:#d8e4f5;font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0 16px}select,input{background:#0d1628;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:inherit}input{min-width:220px;flex:1}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--muted);font-weight:600;padding:10px 8px;border-bottom:1px solid var(--line)}td{padding:11px 8px;border-bottom:1px solid #202c42;vertical-align:top}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}.video-title{font-weight:650}.channel{color:var(--muted);font-size:11px}.region-tag{display:inline-block;color:var(--accent);border:1px solid #345b60;padding:2px 7px;border-radius:20px;font-size:10px}
+.note{border-left:3px solid var(--accent2);padding:12px 14px;color:var(--muted);background:#111a2b;border-radius:0 10px 10px 0;font-size:12px;margin-top:16px}
+.footer{margin-top:28px;color:var(--muted);font-size:11px}
+@media(max-width:800px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.panel{padding:15px}main{padding:26px 14px}.hide-mobile{display:none}}
+</style></head>
+<body><main>
+<div class="eyebrow">Data engineering portfolio · AWS / Glue / Athena</div>
+<h1>YouTube Trending<br>Analytics</h1>
+<p class="sub">A regional view of trending-video observations across ten markets, with engagement signals and the highest-peak-view videos in the validated dataset.</p>
+<div class="meta"><span class="pill">Snapshot: 12 Nov 2026</span><span class="pill">10 regions</span><span class="pill">Curated Parquet · Athena</span><span class="pill">Static query snapshot</span></div>
+<section class="grid kpis" id="kpis"></section>
+<section class="grid two">
+<div class="panel"><h2 class="section-title">Observed views by region</h2><p class="section-note">Sum of daily trending observations, not unique lifetime views</p><div id="viewsChart"></div></div>
+<div class="panel"><h2 class="section-title">Engagement rate by region</h2><p class="section-note">(Likes + comments) ÷ views · dislikes excluded</p><div id="engagementChart"></div></div>
+</section>
+<section class="panel" style="margin-bottom:16px"><h2 class="section-title">Regional performance</h2><p class="section-note">Choose a region to inspect the top videos in that market</p>
+<div class="controls"><select id="regionFilter" aria-label="Filter region"><option value="all">All regions</option></select><input id="search" type="search" placeholder="Search video title or channel" aria-label="Search videos"></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Video</th><th>Region</th><th class="num">Peak views</th><th class="num hide-mobile">Peak likes</th></tr></thead><tbody id="videoRows"></tbody></table></div>
+</section>
+<section class="panel"><h2 class="section-title">Regional dataset</h2><p class="section-note">The unique-video count is calculated separately within each region</p><div style="overflow-x:auto"><table><thead><tr><th>Region</th><th class="num">Observations</th><th class="num">Unique videos</th><th class="num">Avg. views</th><th class="num">Engagement</th></tr></thead><tbody id="regionRows"></tbody></table></div></section>
+<div class="note"><b>Metric interpretation:</b> cumulative observed views sum the views field across daily trending records. The same video can appear on multiple days, so this is not a unique lifetime-view total. Regional unique-video counts can overlap across markets. The dashboard is a reproducible snapshot of Athena query results, not a live connection to AWS.</div>
+<div class="footer">Source: db_youtube_cleaned.youtube_portfolio_v2 · Athena query outputs committed as a static portfolio snapshot · Built for the YouTube Trending Data Pipeline project.</div>
+</main>
+<script>
+const regions=[{"region":"ca","observations":40881,"unique":24427,"views":46891975069,"avg":1147036,"engagement":3.8905},{"region":"de","observations":40840,"unique":29627,"views":24645115205,"avg":603455,"engagement":4.0867},{"region":"fr","observations":40724,"unique":30581,"views":17100897444,"avg":419922,"engagement":4.5774},{"region":"gb","observations":38739,"unique":3272,"views":229014874447,"avg":5911739,"engagement":2.4958},{"region":"in","observations":31897,"unique":16286,"views":29333841011,"avg":919643,"engagement":2.7263},{"region":"jp","observations":14254,"unique":12783,"views":3169851948,"avg":222383,"engagement":3.1775},{"region":"kr","observations":31695,"unique":15869,"views":13180778732,"avg":415863,"engagement":3.2492},{"region":"mx","observations":39884,"unique":33511,"views":13474579584,"avg":337844,"engagement":5.2542},{"region":"ru","observations":40125,"unique":34281,"views":9615193327,"avg":239631,"engagement":5.8875},{"region":"us","observations":40897,"unique":6351,"views":96542259301,"avg":2360620,"engagement":3.5041}];
+const videos=[{"region":"gb","id":"_I_D_8Z4sJE","title":"Nicky Jam x J. Balvin - X (EQUIS) | Video Oficial | Prod. Afro Bros & Jeon","channel":"NickyJamTV","category":10,"views":424538912,"likes":2818771},{"region":"gb","id":"9jI-z9QN6g8","title":"Te Bote Remix - Casper, Nio García, Darell, Nicky Jam, Bad Bunny, Ozuna | Video Oficial","channel":"Flow La Movie","category":10,"views":337621571,"likes":2581961},{"region":"gb","id":"kLpH1nSLJSs","title":"Bad Bunny - Amorfoda | Video Oficial","channel":"Bad Bunny","category":10,"views":328860380,"likes":3823879},{"region":"gb","id":"wfWkmURBNv8","title":"Ozuna x Romeo Santos - El Farsante Remix","channel":"Ozuna","category":10,"views":288811992,"likes":1618180},{"region":"gb","id":"VYOjWnS4cMY","title":"Childish Gambino - This Is America (Official Video)","channel":"ChildishGambinoVEVO","category":10,"views":259721696,"likes":5444541},{"region":"gb","id":"xpVfcZ0ZcFM","title":"Drake - God's Plan","channel":"DrakeVEVO","category":10,"views":258164991,"likes":4737873},{"region":"us","id":"VYOjWnS4cMY","title":"Childish Gambino - This Is America (Official Video)","channel":"ChildishGambinoVEVO","category":10,"views":225211923,"likes":5023450},{"region":"gb","id":"ffxKSjUwKdU","title":"Ariana Grande - No Tears Left To Cry","channel":"ArianaGrandeVevo","category":10,"views":208876887,"likes":3394437},{"region":"gb","id":"zEf423kYfqk","title":"Becky G, Natti Natasha - Sin Pijama (Official Video)","channel":"BeckyGVEVO","category":10,"views":200862743,"likes":1668418},{"region":"gb","id":"FlsCjmMhFmw","title":"YouTube Rewind: The Shape of 2017 | #YouTubeRewind","channel":"YouTube Spotlight","category":24,"views":169884583,"likes":3312868}];
+const fmt=n=>new Intl.NumberFormat('en',{notation:n>=1e9?'compact':'standard',maximumFractionDigits:1}).format(n);
+const pct=n=>n.toFixed(2)+'%';
+const totalObs=regions.reduce((s,r)=>s+r.observations,0),totalViews=regions.reduce((s,r)=>s+r.views,0),regionalUnique=regions.reduce((s,r)=>s+r.unique,0);
+const weightedEng=regions.reduce((s,r)=>s+r.views*r.engagement,0)/totalViews;
+document.getElementById('kpis').innerHTML=[
+['Trending observations',fmt(totalObs),'Video-region-day records'],
+['Observed views',fmt(totalViews),'Summed daily view observations'],
+['Regional unique videos',fmt(regionalUnique),'Sum of per-region distinct counts'],
+['Weighted engagement',pct(weightedEng),'Likes + comments / views']
+].map(x=>'<div class="panel"><div class="kpi-label">'+x[0]+'</div><div class="kpi">'+x[1]+'</div><div class="kpi-note">'+x[2]+'</div></div>').join('');
+function bars(target,key,format){
+ const max=Math.max(...regions.map(r=>r[key]));
+ document.getElementById(target).innerHTML=regions.slice().sort((a,b)=>b[key]-a[key]).map(r=>'<div class="barrow"><b>'+r.region.toUpperCase()+'</b><div class="bar-bg"><div class="bar" style="width:'+Math.max(1,r[key]/max*100)+'%"></div></div><span class="bar-value">'+format(r[key])+'</span></div>').join('');
+}
+bars('viewsChart','views',fmt);bars('engagementChart','engagement',pct);
+const filter=document.getElementById('regionFilter'),search=document.getElementById('search');
+regions.forEach(r=>{const o=document.createElement('option');o.value=r.region;o.textContent=r.region.toUpperCase();filter.append(o)});
+function render(){
+ const selected=filter.value,q=search.value.toLowerCase();
+ const list=videos.filter(v=>(selected==='all'||v.region===selected)&&((v.title+' '+v.channel).toLowerCase().includes(q)));
+ document.getElementById('videoRows').innerHTML=list.map(v=>'<tr><td><div class="video-title"></div><div class="channel"></div></td><td><span class="region-tag">'+v.region.toUpperCase()+'</span></td><td class="num">'+fmt(v.views)+'</td><td class="num hide-mobile">'+fmt(v.likes)+'</td></tr>').join('');
+ document.querySelectorAll('#videoRows tr').forEach((tr,i)=>{tr.children[0].children[0].textContent=list[i].title;tr.children[0].children[1].textContent=list[i].channel});
+}
+document.getElementById('regionRows').innerHTML=regions.map(r=>'<tr><td><b>'+r.region.toUpperCase()+'</b></td><td class="num">'+fmt(r.observations)+'</td><td class="num">'+fmt(r.unique)+'</td><td class="num">'+fmt(r.avg)+'</td><td class="num">'+pct(r.engagement)+'</td></tr>').join('');
+filter.addEventListener('change',render);search.addEventListener('input',render);render();
+</script></body></html>
