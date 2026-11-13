@@ -43,7 +43,7 @@ function renderDashboard(data){
  const pct=n=>(Number(n)||0).toFixed(2)+'%';
  const filter=document.getElementById('regionFilter'),search=document.getElementById('search');
  const regionLabel=r=>r.region.toUpperCase();
- filter.innerHTML='<option value="all">All regions</option>'+regions.map(r=>'<option value="'+r.region+'">'+regionLabel(r)+'</option>').join('');
+ filter.innerHTML='<option value="all">All regions</option>'+regions.map(r=>{const n=videos.filter(v=>v.region===r.region).length;return '<option value="'+r.region+'">'+regionLabel(r)+' ('+n+' video records)</option>';}).join('');
  function render(){
   const selected=filter.value, q=search.value.toLowerCase();
   const scope=selected==='all'?regions:regions.filter(r=>r.region===selected);
@@ -71,7 +71,7 @@ function renderDashboard(data){
   const engagementNote=document.querySelectorAll('.two .panel .section-note')[1];
   if(engagementNote)engagementNote.textContent='(Likes + comments) ÷ views · '+(selected==='all'?'all regions':'selected region');
   const performanceNote=document.querySelector('#videoRows')?.closest('.panel')?.querySelector('.section-note');
-  if(performanceNote)performanceNote.textContent='Top-video records available in this snapshot; not a complete ranking for every market';
+  if(performanceNote){const available=[...new Set(videos.map(v=>v.region))].length;performanceNote.textContent='This snapshot contains '+videos.length+' video records across '+available+' of '+regions.length+' regions. It is not a complete top-video ranking for every market.';}
  }
  filter.addEventListener('change',render); search.addEventListener('input',render);
  const meta=document.querySelector('.meta');
