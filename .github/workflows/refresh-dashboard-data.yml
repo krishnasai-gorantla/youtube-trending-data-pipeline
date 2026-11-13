@@ -13,6 +13,7 @@ on:
 permissions:
   contents: write
   id-token: write
+  pages: write
 
 concurrency:
   group: refresh-dashboard-data
@@ -21,6 +22,8 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
     steps:
       - name: Check out main
         uses: actions/checkout@v4
@@ -42,9 +45,11 @@ jobs:
       - name: Refresh dashboard data from latest successful pipeline run
         run: python scripts/refresh_dashboard.py
       - name: Commit dashboard data when changed
+        id: commit
         run: |
           if git diff --quiet -- docs/dashboard/data.json; then
             echo "Dashboard data is already current."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -52,3 +57,41 @@ jobs:
           git add docs/dashboard/data.json
           git commit -m "Refresh dashboard data from latest AWS pipeline run"
           git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: refresh
+    if: needs.refresh.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out latest dashboard
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check whether GitHub Pages is enabled
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is not enabled yet; the dashboard files remain in the repository."
+          fi
+      - name: Upload dashboard site
+        if: steps.pages.outputs.enabled == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dashboard
+      - name: Deploy to GitHub Pages
+        if: steps.pages.outputs.enabled == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
