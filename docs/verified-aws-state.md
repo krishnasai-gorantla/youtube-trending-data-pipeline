@@ -2,19 +2,55 @@
 
 This file records evidence gathered from the connected AWS environment. Treat it as a snapshot, not a live status page. Re-run checks before deployment or a CV claim.
 
+## Current automated pipeline verification — 13 November 2026
+
+A new Step Functions state machine was created and its first full execution completed successfully in `us-east-1`.
+
+- State machine: `youtube-trending-end-to-end`
+- ARN: `arn:aws:states:us-east-1:303102153405:stateMachine:youtube-trending-end-to-end`
+- Execution ARN: `arn:aws:states:us-east-1:303102153405:execution:youtube-trending-end-to-end:3596e98a-451f-4438-9381-824f56e2b755`
+- Execution: **SUCCEEDED**, 13 Nov 2026 12:23:53–12:37:01 UTC
+- Generated run ID: `e8ac90d7-a4fb-4e95-a0c1-1320038d943f`
+
+| Stage | Resource | Result |
+|---|---|---|
+| Raw CSV staging | `youtube-pipeline-staging-v1` | SUCCEEDED; 136 seconds; 272 DPU-seconds; 375,942 rows across 10 regions |
+| Staging catalog | `youtube-pipeline-staging-crawler` | SUCCEEDED; `youtube_pipeline` table and run/region partitions registered |
+| Curation and quarantine | `youtube-pipeline-curation-v1` | SUCCEEDED; 209 seconds; 419 DPU-seconds |
+| Safe catalog | `youtube-pipeline-safe-crawler` | SUCCEEDED; `youtube_pipeline_safe` table and partitions registered |
+| Quarantine catalog | `youtube-pipeline-quarantine-crawler` | SUCCEEDED; `youtube_pipeline_quarantine` table and partitions registered |
+
+All three crawlers finished in READY state with `LastCrawl.Status=SUCCEEDED`. Total Glue compute recorded for the two jobs was 691 DPU-seconds. Each execution writes to a new `run_id` partition; the original raw, tutorial staging, and v2 curated outputs remain untouched.
+
+**Athena checks for this run:**
+
+| Validation | Result | Query execution ID |
+|---|---:|---|
+| Staging rows / regions | 375,942 / 10 | `e5241872-ce40-4b64-a746-9a244988e437` |
+| Safe rows / regions / invalid IDs | 359,936 / 10 / 0 | `2e66d066-dd9c-4725-8bcd-8297848f0f5a` |
+| Duplicate business-key groups in safe output | 0 | `a5761efc-9afe-4f01-a487-5e5f8702ee98` |
+| Quarantine by issue type | 2,312 invalid IDs; 1,298 conflicting rows | `c69c6f83-ea60-41dc-bf3e-2b617724fe7a` |
+| Regional dashboard metrics | 10 regional rows | `2651f081-35fc-4b33-a517-88f4e62c6bd4` |
+| Top videos | 10 rows | `ae720345-cd6a-455b-b639-32de7e34a7d0` |
+
+The safe output is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/safe/`; quarantine is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/quarantine/`. Glue Catalog tables are `db_youtube_cleaned.youtube_pipeline_safe` and `db_youtube_cleaned.youtube_pipeline_quarantine`. The run-scoped Athena templates are `sql/09` through `sql/11`.
+
+**Trigger and dashboard status:** the state machine is currently started manually (input `{}`); the full ETL itself is orchestrated. No S3 batch-ready trigger is deployed. The HTML dashboard snapshot in `docs/dashboard/index.html` reflects this successful run; it is not a live AWS connection. GitHub Pages deployment is prepared in Actions but still depends on Pages being enabled for the repository. QuickSight remains unsubscribed, with no subscription enabled.
+
+
 ## AWS resource inventory
 
 The read-only inventory in `us-east-1` found:
 
 - 5 S3 buckets, including the raw and cleansed YouTube buckets.
-- 6 Glue jobs and 6 Glue crawlers.
+- At the initial inventory: 6 Glue jobs and 6 Glue crawlers. The new pipeline adds 2 Glue jobs and 3 crawlers (8 jobs and 9 crawlers in total after deployment).
 - 1 active Lambda function: `de-youtube-raw-useast1-lambda-json-sheet` (Python 3.12, handler `index.lambda_handler`).
-- 0 Step Functions state machines.
+- At the initial inventory: 0 Step Functions state machines. The `youtube-trending-end-to-end` state machine has since been created and successfully executed (see current verification above).
 - No S3 bucket notifications were configured on the raw bucket, no Lambda event-source mappings were found for the JSON/reference-data function, and the function has no resource-based policy.
 - The Lambda environment points at `s3://de-on-youtube-cleansed-useast1-s3/youtube` with `write_data_operation=append`; leave it untouched until its code and intended invocation path are reviewed.
 - The account is not subscribed to Amazon QuickSight. Dashboard/analysis listing returned `UnsupportedUserEditionException`; the dataset listing returned zero datasets.
 
-The Lambda deployment package is not yet captured in this repository. No Step Functions orchestration was found in this region during the inspection. A QuickSight dashboard has not been deployed.
+The Lambda deployment package is not yet captured in this repository. The initial inventory preceded creation of the new Step Functions workflow. A QuickSight dashboard has not been deployed.
 
 ## Glue job run history inspected
 
@@ -28,6 +64,8 @@ The Glue API inspection returned the following evidence:
 | `de-youtube-raw-to-cleansed-glue-job` | Latest returned runs: FAILED (8 Sep 2026) | Errors identify `MXvideos.csv` and `KRvideos.csv` as files that could not be parsed |
 | `youtube-tutorial-staging-validation` | SUCCEEDED (17 Oct 2026) | Uses explicit schema and ISO-8859-1 encoding; writes partitioned Parquet to a separate staging prefix |
 | `youtube-portfolio-curation-v2` | SUCCEEDED (12 Nov 2026) | 216 seconds, 433 DPU-seconds; writes safe and quarantine Parquet to a new isolated prefix |
+| `youtube-pipeline-staging-v1` | SUCCEEDED (13 Nov 2026) | 136 seconds, 272 DPU-seconds; writes unique run_id/region partitions |
+| `youtube-pipeline-curation-v1` | SUCCEEDED (13 Nov 2026) | 209 seconds, 419 DPU-seconds; run-scoped safe/quarantine outputs with quality assertions |
 
 The API request for most jobs was limited to the latest five returned records. This is not a complete historical audit.
 
@@ -171,8 +209,9 @@ The cleaned database `db_youtube_cleaned` contained eight tables after curation,
 
 ## Safe next verification steps
 
-1. Capture and review the existing Lambda deployment package before changing its append-mode behavior or invocation path.
-2. Decide whether to create a Step Functions workflow; none currently exists, and the existing staging/curation jobs intentionally use fixed, non-overwriting output prefixes.
-3. Subscribe to QuickSight only if the account owner approves the service and any associated charges; otherwise use the validated Athena queries with Power BI or another BI tool.
-4. Investigate the observed mojibake in some text fields (for example, `GarcÃ­a`) in a separate encoding-correction transformation. Do not alter the validated numeric dataset in place.
-5. Review the 649 conflicting business keys and establish a documented reconciliation rule before promoting any quarantined variants.
+1. Capture and review the existing Lambda deployment package before changing its append-mode behavior or invocation path; it remains separate from the new workflow.
+2. If hands-off batch initiation is required, deploy and test an S3 batch-ready marker trigger for the state machine. The current state machine is fully orchestrated but manually started.
+3. Enable GitHub Pages in repository settings if a hosted dashboard URL is required; otherwise open `docs/dashboard/index.html` directly from the repository. The dashboard is a static query snapshot.
+4. Subscribe to QuickSight only if the account owner approves the service and any associated charges; no subscription has been enabled.
+5. Investigate the observed mojibake in some text fields (for example, `GarcÃ­a`) in a separate encoding-correction transformation. Do not alter the validated numeric dataset in place.
+6. Review the 649 conflicting business keys and establish a documented reconciliation rule before promoting any quarantined variants.
