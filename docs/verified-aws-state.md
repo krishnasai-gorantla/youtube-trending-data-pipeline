@@ -20,7 +20,7 @@ A new Step Functions state machine was created and its first full execution comp
 | Safe catalog | `youtube-pipeline-safe-crawler` | SUCCEEDED; `youtube_pipeline_safe` table and partitions registered |
 | Quarantine catalog | `youtube-pipeline-quarantine-crawler` | SUCCEEDED; `youtube_pipeline_quarantine` table and partitions registered |
 
-All three crawlers finished in READY state with `LastCrawl.Status=SUCCEEDED`. Total Glue compute recorded for the two jobs was 691 DPU-seconds. Each execution writes to a new `run_id` partition; the original raw, tutorial staging, and v2 curated outputs remain untouched.
+All three crawlers finished in READY state with `LastCrawl.Status=SUCCEEDED`. Total Glue compute recorded for the two jobs was 691 DPU-seconds. Each execution writes to a new `run_id` partition using append mode after checking that the run-specific output prefix is empty; reusing a run ID is rejected. The original raw, tutorial staging, and v2 curated outputs remain untouched.
 
 **Athena checks for this run:**
 
