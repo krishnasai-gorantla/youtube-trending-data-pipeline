@@ -85,5 +85,5 @@ function renderDashboard(data){
  if(footer)footer.textContent='Source: db_youtube_cleaned.youtube_pipeline_safe · run '+data.run_id+' · static Athena query snapshot · Built for the YouTube Trending Data Pipeline project.';
  render();
 }
-fetch('./data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Dashboard data not available');return r.json();}).then(renderDashboard).catch(()=>renderDashboard(fallbackData));
+fetch('./data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Dashboard data not available');return r.json();}).then(renderDashboard).catch(()=>{const message='Dashboard data could not be loaded. Refresh the page or try again later.';document.getElementById('kpis').innerHTML='<div class="panel" role="alert">'+message+'</div>';['viewsChart','engagementChart'].forEach(id=>{document.getElementById(id).textContent='Data unavailable.';});document.getElementById('videoRows').innerHTML='<tr><td colspan="4">'+message+'</td></tr>';document.getElementById('regionRows').innerHTML='<tr><td colspan="5">'+message+'</td></tr>';document.getElementById('categoryRows').innerHTML='<tr><td colspan="5">'+message+'</td></tr>';});
 </script></body></html>
