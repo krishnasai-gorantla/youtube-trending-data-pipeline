@@ -62,7 +62,7 @@ The automated path implemented in AWS is the run-isolated CSV staging → Glue C
 | AWS Glue / PySpark | Performs batch transformations, validation and curation |
 | AWS Lambda | One active JSON/reference-data function exists; its code is not yet captured here |
 | Amazon Athena | Runs SQL directly against S3-backed tables |
-| Amazon QuickSight | Not currently subscribed; dashboard uses a GitHub Pages-ready static snapshot instead |
+| Amazon QuickSight | Not subscribed; no QuickSight charges. The interactive HTML dashboard is published through GitHub Pages once enabled |
 | AWS Step Functions | Orchestrates the repeatable staging → catalog → curation → safe/quarantine catalog workflow |
 | GitHub | Stores scripts, SQL, documentation and validation checks |
 
