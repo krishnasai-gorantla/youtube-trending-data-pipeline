@@ -2,7 +2,7 @@
 
 A portfolio project exploring batch data engineering on AWS using the Kaggle YouTube Trending Videos dataset. The repository preserves the Glue scripts captured from the AWS environment and documents the verified state of the pipeline, its known defects, and the recovery plan.
 
-> **Current state:** The original tutorial data and jobs are preserved. A repeatable AWS Step Functions workflow now orchestrates new run-isolated staging, quality curation, quarantine and Glue Catalog registration. The earlier v2 curated snapshot remains verified at 359,936 safe rows. See [the orchestration runbook](docs/end-to-end-orchestration.md), [the dashboard](dashboard/index.html), and [the AWS verification record](docs/verified-aws-state.md).
+> **Current state:** The original tutorial data and jobs are preserved. A repeatable AWS Step Functions workflow now orchestrates new run-isolated staging, quality curation, quarantine and Glue Catalog registration. The earlier v2 curated snapshot remains verified at 359,936 safe rows. See [the orchestration runbook](docs/end-to-end-orchestration.md), [the dashboard](docs/dashboard/index.html), and [the AWS verification record](docs/verified-aws-state.md).
 
 ## Project goals
 
