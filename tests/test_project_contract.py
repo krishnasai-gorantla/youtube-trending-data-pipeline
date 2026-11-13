@@ -43,6 +43,10 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("StartStagingCrawler", states)
         self.assertIn("StartSafeCrawler", states)
         self.assertIn("StartQuarantineCrawler", states)
+        self.assertEqual(states["StagingCrawlerFailed"]["Type"], "Fail")
+        self.assertEqual(states["SafeCrawlerFailed"]["Type"], "Fail")
+        self.assertEqual(states["QuarantineCrawlerFailed"]["Type"], "Fail")
+        self.assertEqual(definition["TimeoutSeconds"], 7200)
 
     def test_pipeline_jobs_are_run_isolated(self):
         staging = (ROOT / "src" / "glue" / "youtube-pipeline-staging-v1.py").read_text(encoding="utf-8")
