@@ -60,7 +60,7 @@ The S3/EventBridge trigger was exercised with a test batch-ready marker. The fir
 | Safe catalog | `youtube-pipeline-safe-crawler` | SUCCEEDED; crawler returned to READY |
 | Quarantine catalog | `youtube-pipeline-quarantine-crawler` | SUCCEEDED; crawler returned to READY |
 
-Total Glue compute for this run was 652 DPU-seconds (194 + 458). This test used the same source CSV batch, so the row counts and dashboard metrics are expected to match the prior successful run. It verifies that a fresh run ID can publish a second isolated set of partitions without overwriting the earlier run.
+Total Glue compute for this run was 652 DPU-seconds (194 + 458). This test used the same source CSV batch, so the row counts and dashboard metrics are expected to match the prior successful run. It verifies that a fresh run ID can publish a second isolated set of partitions without overwriting the earlier run. A separate Athena query confirmed that both run IDs coexist in the safe table with 359,936 rows and 10 regions each (query execution ID `40525998-bba4-4e45-9107-7bf7b9f78a0a`).
 
 **Independent Athena validation for this run:**
 
