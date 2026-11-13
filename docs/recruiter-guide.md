@@ -67,7 +67,7 @@ I would improve text encoding, add automated tests with sample input files, and 
 
 - The dataset is from Kaggle; it is not a live YouTube API feed.
 - The dashboard uses a committed JSON snapshot and does not query AWS in the browser.
-- The top-video table is limited to the records included in the snapshot. It is not a full ranking for every region.
+- The top-video table contains the top 10 videos per region by peak observed views for the selected run. Likes are taken from the same observation as the peak views.
 - Amazon QuickSight is not used in this project.
 - The project was informed by a public AWS tutorial. Be clear about which parts were adapted and which data-quality, orchestration, SQL and dashboard work you implemented.
 
