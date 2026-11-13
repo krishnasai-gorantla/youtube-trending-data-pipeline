@@ -110,6 +110,7 @@ Three Athena queries are validated against the curated table:
 - `sql/06_region_dashboard_kpis.sql` — regional observations, unique videos, observed views and engagement rate.
 - `sql/07_category_dashboard_performance.sql` — regional category comparisons with a deduplicated category lookup.
 - `sql/08_top_videos.sql` — top videos by peak observed views within each region.
+- `sql/09_pipeline_region_kpis.sql`, `sql/10_pipeline_category_performance.sql`, and `sql/11_pipeline_top_videos.sql` — equivalent analysis against a specific run of the new automated pipeline; replace `<RUN_ID>` with the Step Functions run ID.
 
 The metric definitions and query grain are in [dashboard-data-model.md](docs/dashboard-data-model.md). The AWS account is not currently subscribed to QuickSight, so there is no deployed QuickSight dashboard. The tested Athena outputs are ready to connect to Power BI or another BI tool.
 ## Run the automated AWS pipeline
