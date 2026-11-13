@@ -61,6 +61,9 @@ class RepositoryContractTests(unittest.TestCase):
     def test_sql_files_exist(self):
         self.assertTrue((ROOT / "sql" / "01_table_validation.sql").is_file())
         self.assertTrue((ROOT / "sql" / "03_duplicate_audit.sql").is_file())
+        self.assertTrue((ROOT / "sql" / "09_pipeline_region_kpis.sql").is_file())
+        self.assertTrue((ROOT / "sql" / "10_pipeline_category_performance.sql").is_file())
+        self.assertTrue((ROOT / "sql" / "11_pipeline_top_videos.sql").is_file())
 
 
 if __name__ == "__main__":
