@@ -1017,5 +1017,5 @@
       "likes": 815369
     }
   ],
-  "top_videos_scope": "top 10 videos per region ranked by peak observed views; likes shown from the same peak-view observation"
+  "top_videos_scope": "Top 10 videos per region, ranked by peak observed views; likes are from the same peak-view observation."
 }
