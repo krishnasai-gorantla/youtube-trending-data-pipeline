@@ -115,7 +115,7 @@ Three Athena queries are validated against the curated table:
 The metric definitions and query grain are in [dashboard-data-model.md](docs/dashboard-data-model.md). The AWS account is not currently subscribed to QuickSight, so there is no deployed QuickSight dashboard. The tested Athena outputs are ready to connect to Power BI or another BI tool.
 ## Run the automated AWS pipeline
 
-Start the Step Functions state machine `youtube-trending-end-to-end` in `us-east-1` with input `{}`. It generates a unique run ID and runs both Glue jobs plus the three catalog crawlers. Each execution writes to a new partitioned output and preserves earlier runs. Full details: [end-to-end orchestration](docs/end-to-end-orchestration.md).
+The pipeline is event-driven from an explicit batch-ready marker. Upload all 10 regional CSVs to the raw S3 prefix, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready` to the same raw bucket. S3 EventBridge starts `youtube-trending-end-to-end`, which generates a run ID and runs both Glue jobs plus the three catalog crawlers. Use a new marker key per batch; duplicate S3/EventBridge deliveries can start duplicate executions. For manual recovery, start the state machine with `{}`. Each execution writes to a new partitioned output and preserves earlier runs. Full details: [end-to-end orchestration](docs/end-to-end-orchestration.md).
 
 ## Run local checks
 
