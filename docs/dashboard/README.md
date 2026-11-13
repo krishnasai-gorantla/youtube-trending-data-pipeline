@@ -27,6 +27,6 @@ The dashboard refresh role is restricted to this repository's `main` branch and 
 
 ## Hosting
 
-GitHub Pages must be enabled once in repository settings: **Settings → Pages → Build and deployment → Source: GitHub Actions**. The deployment workflow is already in the repository. Once Pages is enabled, rerun the failed **Publish dashboard** workflow or push a dashboard update.
+GitHub Pages must be enabled once in repository settings: **Settings → Pages → Build and deployment → Source: GitHub Actions**. The deployment workflow is already in the repository. Once Pages is enabled, run **Actions → Publish dashboard → Run workflow** for the first deployment. Subsequent new pipeline runs refresh the JSON and trigger deployment automatically.
 
 Amazon QuickSight is intentionally not enabled; the account is not subscribed and no subscription charge was authorised.
