@@ -37,7 +37,9 @@ The safe output is in `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pi
 
 **Trigger and dashboard status:** S3 EventBridge notifications are enabled on the raw bucket. The enabled rule `youtube-pipeline-batch-ready` matches `pipeline_triggers/*.ready` object-created events and targets the Step Functions state machine through a dedicated role with `states:StartExecution` only. The event pattern passed `TestEventPattern`; the trigger has now been fired with a controlled test marker and the retry completed successfully (see the latest rerun evidence above). To start a future batch automatically, upload all 10 regional CSVs first, then upload a unique marker object such as `pipeline_triggers/batch-2026-11-14.ready`. Use a new key per batch; S3/EventBridge delivery is at-least-once, so duplicate marker notifications can create duplicate executions. Manual execution with `{}` remains available for recovery.
 
-The HTML dashboard snapshot in `docs/dashboard/index.html` reflects the latest successful run `72af6f39-6a91-4c80-954e-1d9a1830a588`; it is not a live AWS connection. GitHub Pages deployment is prepared in Actions, but the first deployment failed with GitHub's 404 because Pages has not yet been enabled for this repository. The Pages artifact uploaded successfully. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**, then rerun the `Publish dashboard` workflow. QuickSight remains unsubscribed, with no subscription enabled.
+Dashboard data is now refreshed automatically by GitHub Actions at minute 17 of every hour (and on manual dispatch). The workflow uses GitHub OIDC to assume `arn:aws:iam::303102153405:role/youtube-dashboard-refresh-github-actions`; its trust is restricted to this repository's immutable owner/repository IDs and `main` branch. Its permissions are limited to reading Step Functions execution metadata, the curated Glue Catalog tables and S3 Parquet, running Athena queries, and writing Athena results to a dedicated temporary prefix. It cannot start Glue jobs or modify source/curated data. The first authenticated refresh succeeded (workflow run `43432957979`); a follow-up run confirmed unchanged data does not create another commit (`43433160585`). The JSON output is `docs/dashboard/data.json`; `index.html` loads it with an embedded fallback snapshot.
+
+GitHub Pages is not enabled yet. The publish workflow now detects that state and skips deployment cleanly instead of failing. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**, then run **Actions → Publish dashboard → Run workflow** once. After that, new dashboard data commits will be deployed automatically. Athena charges apply to scheduled refresh queries; QuickSight remains unsubscribed and no QuickSight subscription has been enabled.
 
 
 ## Latest end-to-end rerun — 13 November 2026
@@ -71,6 +73,19 @@ Total Glue compute for this run was 652 DPU-seconds (194 + 458). This test used 
 | Top videos | 10 rows | `035e2699-dc67-4d22-81c7-788be08e1ef5` |
 
 The dashboard snapshot was refreshed to this latest run ID. Regional metrics match the previous successful execution because the underlying source batch did not change.
+
+## Dashboard automation — 13 November 2026
+
+- GitHub OIDC provider: `arn:aws:iam::303102153405:oidc-provider/token.actions.githubusercontent.com`
+- Refresh role: `arn:aws:iam::303102153405:role/youtube-dashboard-refresh-github-actions`
+- GitHub immutable repository identity in the trust condition: owner ID `341680151`, repository ID `1416165027`, branch `main`
+- Schedule: hourly at minute 17 UTC, plus manual dispatch
+- Successful refresh workflow: `43432957979`
+- Idempotency check workflow: `43433160585` (succeeded; no data-change commit)
+- Dashboard JSON: `docs/dashboard/data.json`
+- Dashboard page: `docs/dashboard/index.html`
+
+The scheduled job selects the latest successful Step Functions execution and refreshes region KPIs, top videos and data-quality metrics from Athena. It commits only when the dashboard payload changes. The refresh role uses short-lived GitHub OIDC credentials, not long-lived AWS keys in GitHub secrets. GitHub Pages still requires one-time enablement by the repository owner.
 
 ## AWS resource inventory
 
