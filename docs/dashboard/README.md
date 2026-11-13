@@ -1,37 +1,33 @@
 # Dashboard
 
-The dashboard is a lightweight interactive HTML page backed by the committed `data.json` snapshot.
+The dashboard is a small HTML page that reads the committed `data.json` file. It does not connect to AWS or YouTube when someone opens it.
 
-## View locally
+## Open it
 
-From the repository root:
+- [Open the published dashboard](https://krishnasai-gorantla.github.io/youtube-trending-data-pipeline/)
+- To run it locally, start a server from the repository root:
 
 ```bash
 python -m http.server 8000
 ```
 
-Open `http://localhost:8000/docs/dashboard/`. The page also contains a fallback snapshot if local browser security blocks the JSON request.
+Then visit `http://localhost:8000/docs/dashboard/`.
 
-## Data freshness
+## Data in the dashboard
 
-- Snapshot file: `docs/dashboard/data.json`
-- Latest snapshot timestamp: 2026-11-13 13:06:47 UTC
-- Source: latest verified successful AWS pipeline execution at the time the snapshot was generated.
-- This is a historical dataset snapshot, not a live feed.
+- Snapshot: `data.json`
+- Snapshot timestamp: 13 November 2026, 13:06:47 UTC
+- Source: Athena query results from the latest verified successful pipeline run.
+- The source dataset is historical Kaggle data, not live YouTube activity.
 
-The scheduled Athena refresh workflow has been removed from active GitHub Actions workflows to avoid recurring AWS usage. Its prior workflow file is retained as a disabled archive under `docs/disabled-workflows/`. Do not restore or schedule it unless you explicitly decide to incur the associated Athena and GitHub Actions usage.
+The regional summary contains all ten regions. The top-video table contains only the records included in this snapshot, so it should not be treated as a complete regional ranking.
 
-## Publish with GitHub Pages
+## Updating the dashboard
 
-The repository contains `.github/workflows/publish-dashboard.yml`. GitHub Pages must first be enabled by a repository administrator:
+The dashboard data is currently a static snapshot. The scheduled AWS refresh is paused to avoid recurring Athena and other AWS usage. To update it, the pipeline and Athena queries need to be run deliberately, the JSON snapshot regenerated and checked, and the change committed.
 
-1. Open **Repository → Settings → Pages**.
-2. Under **Build and deployment**, choose **GitHub Actions** as the source.
-3. Open **Actions → Publish dashboard** and run the workflow manually.
-4. After the workflow succeeds, use the page URL reported by the deployment job. Do not use a guessed URL before deployment is confirmed.
+GitHub Actions publishes changes to the dashboard through `.github/workflows/publish-dashboard.yml`. GitHub Pages is enabled and the latest publish workflow completed successfully.
 
-The linked GitHub account has repository admin permission, but this workflow does not enable Pages settings itself.
+## Cost
 
-## AWS cost notes
-
-The dashboard is static and can be viewed without running AWS services. Amazon QuickSight is not used and no QuickSight subscription has been created. The data refresh is intentionally manual/offline at present.
+Viewing the published or local dashboard does not require an AWS job to run. Starting Glue jobs, Step Functions executions or Athena queries can incur usage-based charges.
