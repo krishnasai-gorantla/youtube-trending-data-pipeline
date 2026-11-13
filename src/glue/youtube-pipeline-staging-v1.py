@@ -1,5 +1,6 @@
 import json
 import sys
+import boto3
 from datetime import datetime, timezone
 
 from awsglue.context import GlueContext
@@ -70,11 +71,17 @@ if malformed_rows:
     raise RuntimeError(f"Malformed CSV rows detected: {malformed_rows}")
 
 output = df.drop("_corrupt_record")
-output_path = (
-    f"s3://{args['OUTPUT_BUCKET']}/{args['OUTPUT_PREFIX'].strip('/')}"
+output_prefix = args["OUTPUT_PREFIX"].strip("/")
+output_path = f"s3://{args['OUTPUT_BUCKET']}/{output_prefix}"
+run_prefix = f"{output_prefix}/run_id={args['RUN_ID']}/"
+s3 = boto3.client("s3")
+existing = s3.list_objects_v2(
+    Bucket=args["OUTPUT_BUCKET"], Prefix=run_prefix, MaxKeys=1
 )
+if existing.get("KeyCount", 0):
+    raise RuntimeError(f"Refusing to reuse non-empty staging run prefix: {run_prefix}")
 (
-    output.write.mode("errorifexists")
+    output.write.mode("append")
     .format("parquet")
     .option("compression", "snappy")
     .partitionBy("run_id", "region")
