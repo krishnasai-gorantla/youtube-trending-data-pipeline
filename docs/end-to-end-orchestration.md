@@ -23,6 +23,16 @@ The original raw, tutorial staging, and v2 curated outputs are preserved. The au
 - Staging S3 root: `s3://de-on-youtube-cleansed-useast1-s3/staging/youtube_pipeline/`
 - Curated S3 roots: `s3://de-on-youtube-cleansed-useast1-s3/curated/youtube_pipeline/safe/` and `.../quarantine/`
 
+## Query a completed run
+
+After the execution succeeds, copy the `run_id` from the execution's `AssignRunId` state output. Use it in the automated-pipeline SQL files:
+
+- `sql/09_pipeline_region_kpis.sql`
+- `sql/10_pipeline_category_performance.sql`
+- `sql/11_pipeline_top_videos.sql`
+
+Replace the `<RUN_ID>` placeholder with the exact run ID. The earlier `sql/06` through `sql/08` files remain tied to the independently verified v2 snapshot.
+
 ## Run it
 
 Start a Step Functions execution with an empty JSON object. The state machine generates its own run ID:
