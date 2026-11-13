@@ -26,11 +26,11 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;colo
 <div class="panel"><h2 class="section-title">Observed views by region</h2><p class="section-note">Sum of daily trending observations, not unique lifetime views</p><div id="viewsChart"></div></div>
 <div class="panel"><h2 class="section-title">Engagement rate by region</h2><p class="section-note">(Likes + comments) ÷ views · dislikes excluded</p><div id="engagementChart"></div></div>
 </section>
-<section class="panel" style="margin-bottom:16px"><h2 class="section-title">Regional performance</h2><p class="section-note">Choose a region to inspect the top videos in that market</p>
+<section class="panel" style="margin-bottom:16px"><h2 class="section-title">Top videos in selected region</h2><p class="section-note">The region selector filters this limited top-video snapshot only</p>
 <div class="controls"><select id="regionFilter" aria-label="Filter region"><option value="all">All regions</option></select><input id="search" type="search" placeholder="Search video title or channel" aria-label="Search videos"></div>
 <div style="overflow-x:auto"><table><thead><tr><th>Video</th><th>Region</th><th class="num">Peak views</th><th class="num hide-mobile">Peak likes</th></tr></thead><tbody id="videoRows"></tbody></table></div>
 </section>
-<section class="panel"><h2 class="section-title">Regional dataset</h2><p class="section-note">The unique-video count is calculated separately within each region</p><div style="overflow-x:auto"><table><thead><tr><th>Region</th><th class="num">Observations</th><th class="num">Unique videos</th><th class="num">Avg. views</th><th class="num">Engagement</th></tr></thead><tbody id="regionRows"></tbody></table></div></section>
+<section class="panel"><h2 class="section-title">Regional performance across all regions</h2><p class="section-note">All ten markets remain visible here, regardless of the video-region filter</p><div style="overflow-x:auto"><table><thead><tr><th>Region</th><th class="num">Observations</th><th class="num">Unique videos</th><th class="num">Avg. views</th><th class="num">Engagement</th></tr></thead><tbody id="regionRows"></tbody></table></div></section>
 <section class="panel" style="margin-top:16px"><h2 class="section-title">Category performance</h2><p class="section-note">Top 15 categories by cumulative observed views across the selected pipeline run</p><div style="overflow-x:auto"><table><thead><tr><th>Category</th><th class="num">Observations</th><th class="num">Unique videos</th><th class="num">Observed views</th><th class="num">Engagement</th></tr></thead><tbody id="categoryRows"></tbody></table></div></section>
 <div class="note"><b>Metric interpretation:</b> cumulative observed views sum the views field across daily trending records. The same video can appear on multiple days, so this is not a unique lifetime-view total. Regional unique-video counts can overlap across markets. The dashboard is a reproducible snapshot of Athena query results, not a live connection to AWS.</div>
 <div class="footer">Source: db_youtube_cleaned.youtube_pipeline_safe · run 72af6f39-6a91-4c80-954e-1d9a1830a588 · Athena query outputs committed as a static portfolio snapshot · Built for the YouTube Trending Data Pipeline project.</div>
@@ -64,14 +64,14 @@ function renderDashboard(data){
   const list=videos.filter(v=>(selected==='all'||v.region===selected)&&((v.title+' '+v.channel).toLowerCase().includes(q)));
   document.getElementById('videoRows').innerHTML=list.length?list.map(v=>'<tr><td><div class="video-title"></div><div class="channel"></div></td><td><span class="region-tag">'+v.region.toUpperCase()+'</span></td><td class="num">'+fmt(v.views)+'</td><td class="num hide-mobile">'+fmt(v.likes)+'</td></tr>').join(''):'<tr><td colspan="4" style="color:var(--muted)">No matching video records are included in this limited top-video snapshot for the selected region. Regional summary metrics above are still available.</td></tr>';
   document.querySelectorAll('#videoRows tr').forEach((tr,i)=>{if(list[i]){tr.children[0].children[0].textContent=list[i].title;tr.children[0].children[1].textContent=list[i].channel;}});
-  document.getElementById('regionRows').innerHTML=scope.map(r=>'<tr><td><b>'+regionLabel(r)+'</b></td><td class="num">'+fmt(r.observations)+'</td><td class="num">'+fmt(r.unique)+'</td><td class="num">'+fmt(r.avg)+'</td><td class="num">'+pct(r.engagement)+'</td></tr>').join('');
+  document.getElementById('regionRows').innerHTML=regions.map(r=>'<tr><td><b>'+regionLabel(r)+'</b></td><td class="num">'+fmt(r.observations)+'</td><td class="num">'+fmt(r.unique)+'</td><td class="num">'+fmt(r.avg)+'</td><td class="num">'+pct(r.engagement)+'</td></tr>').join('');
   document.getElementById('categoryRows').innerHTML=categories.map(c=>'<tr><td><b>'+c.category_name+'</b><div class="channel">ID '+c.category_id+'</div></td><td class="num">'+fmt(c.observations)+'</td><td class="num">'+fmt(c.unique_videos)+'</td><td class="num">'+fmt(c.observed_views)+'</td><td class="num">'+pct(c.engagement)+'</td></tr>').join('');
   const regionalNote=document.querySelector('.two .panel .section-note');
   if(regionalNote)regionalNote.textContent='Sum of daily trending observations'+(selected==='all'?' · all regions':' · '+selected.toUpperCase());
   const engagementNote=document.querySelectorAll('.two .panel .section-note')[1];
   if(engagementNote)engagementNote.textContent='(Likes + comments) ÷ views · '+(selected==='all'?'all regions':'selected region');
   const performanceNote=document.querySelector('#videoRows')?.closest('.panel')?.querySelector('.section-note');
-  if(performanceNote)performanceNote.textContent='Available video records in this snapshot; this is not a complete per-region ranking';
+  if(performanceNote)performanceNote.textContent='Top-video records available in this snapshot; not a complete ranking for every market';
  }
  filter.addEventListener('change',render); search.addEventListener('input',render);
  const meta=document.querySelector('.meta');
