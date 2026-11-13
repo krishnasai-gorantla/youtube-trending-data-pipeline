@@ -22,6 +22,7 @@ STATE_MACHINE_ARN = os.getenv(
 DATABASE = "db_youtube_cleaned"
 SAFE_TABLE = "youtube_pipeline_safe"
 QUARANTINE_TABLE = "youtube_pipeline_quarantine"
+REFERENCE_TABLE = "statistics_reference_data"
 WORKGROUP = "primary"
 ATHENA_OUTPUT = os.getenv(
     "ATHENA_OUTPUT",
@@ -149,6 +150,28 @@ def main() -> None:
         ORDER BY region
         """
     )
+    category_rows = query_rows(
+        f"""
+        WITH category_lookup AS (
+            SELECT id, MAX(snippet_title) AS category_name
+            FROM {REFERENCE_TABLE}
+            GROUP BY id
+        )
+        SELECT y.category_id,
+               COALESCE(c.category_name, 'Unknown') AS category_name,
+               COUNT(*) AS observations,
+               COUNT(DISTINCT y.video_id) AS unique_videos,
+               SUM(y.views) AS observed_views,
+               ROUND(100.0 * (SUM(y.likes) + SUM(y.comment_count))
+                     / NULLIF(SUM(y.views), 0), 4) AS engagement
+        FROM {SAFE_TABLE} y
+        LEFT JOIN category_lookup c ON y.category_id = c.id
+        WHERE y.run_id = '{run_id}'
+        GROUP BY y.category_id, COALESCE(c.category_name, 'Unknown')
+        ORDER BY observed_views DESC
+        LIMIT 15
+        """
+    )
     video_rows = query_rows(
         f"""
         SELECT region, video_id,
@@ -163,7 +186,7 @@ def main() -> None:
         LIMIT 10
         """
     )
-    if not quality_rows or not regional_rows:
+    if not quality_rows or not regional_rows or not category_rows:
         raise RuntimeError(f"No dashboard rows returned for run_id={run_id}.")
 
     quality = quality_rows[0]
@@ -198,6 +221,17 @@ def main() -> None:
                 "engagement": as_float(row["engagement"]),
             }
             for row in regional_rows
+        ],
+        "categories": [
+            {
+                "category_id": as_int(row["category_id"]),
+                "category_name": row["category_name"],
+                "observations": as_int(row["observations"]),
+                "unique_videos": as_int(row["unique_videos"]),
+                "observed_views": as_int(row["observed_views"]),
+                "engagement": as_float(row["engagement"]),
+            }
+            for row in category_rows
         ],
         "videos": [
             {
