@@ -92,7 +92,7 @@ Then open `http://localhost:8000/docs/dashboard/`.
 ## Limitations and next steps
 
 - The source is a historical Kaggle dataset, not a live YouTube feed.
-- The dashboard contains a limited top-video snapshot; it is not a complete ranking for every region.
+- The dashboard includes the top 10 videos per region by peak observed views for the selected pipeline run. Likes are taken from the same observation as the peak views; this is historical Kaggle data, not live YouTube activity.
 - Some source text has encoding artefacts that still need cleaning.
 - AWS automatic triggers and scheduled refreshes are paused.
 - A useful next improvement would be to add more automated tests using representative input files and to improve text-encoding handling.
