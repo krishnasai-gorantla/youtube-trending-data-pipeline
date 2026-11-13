@@ -61,6 +61,10 @@ GROUP BY region
 ORDER BY region;
 ```
 
+## Dashboard refresh and hosting
+
+The repository dashboard reads `docs/dashboard/data.json`. The GitHub Actions workflow `refresh-dashboard-data.yml` is scheduled hourly (minute 17 UTC) and can also be run manually. It uses GitHub OIDC to assume the restricted AWS role `youtube-dashboard-refresh-github-actions`, finds the latest successful Step Functions execution, queries Athena for its regional KPIs, top videos and quality metrics, and commits the JSON only when it changes. The separate `publish-dashboard.yml` workflow deploys the dashboard files to GitHub Pages after a dashboard change. GitHub Pages must be enabled once in repository settings; see [dashboard instructions](dashboard/README.md).
+
 ## Cost and limitations
 
 The workflow is event-driven by an explicit batch-ready marker rather than by each CSV object, so a partial 10-file upload does not start ETL. Each execution starts two Glue jobs, so it incurs Glue DPU charges. No QuickSight subscription or other paid dashboard service is enabled by this implementation.
