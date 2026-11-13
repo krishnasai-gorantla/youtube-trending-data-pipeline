@@ -174,5 +174,127 @@
       "views": 169884583,
       "likes": 3312868
     }
+  ],
+  "categories": [
+    {
+      "category_id": 10,
+      "category_name": "Music",
+      "observations": 40997,
+      "unique_videos": 10523,
+      "observed_views": 250689359429,
+      "engagement": 3.044
+    },
+    {
+      "category_id": 24,
+      "category_name": "Entertainment",
+      "observations": 103514,
+      "unique_videos": 52931,
+      "observed_views": 98903728552,
+      "engagement": 3.1345
+    },
+    {
+      "category_id": 1,
+      "category_name": "Film & Animation",
+      "observations": 19983,
+      "unique_videos": 9229,
+      "observed_views": 26312508255,
+      "engagement": 2.3772
+    },
+    {
+      "category_id": 22,
+      "category_name": "People & Blogs",
+      "observations": 51814,
+      "unique_videos": 33260,
+      "observed_views": 22962085641,
+      "engagement": 3.3994
+    },
+    {
+      "category_id": 23,
+      "category_name": "Comedy",
+      "observations": 25766,
+      "unique_videos": 10734,
+      "observed_views": 21112559084,
+      "engagement": 5.369
+    },
+    {
+      "category_id": 17,
+      "category_name": "Sports",
+      "observations": 22866,
+      "unique_videos": 13543,
+      "observed_views": 18381174139,
+      "engagement": 2.3569
+    },
+    {
+      "category_id": 25,
+      "category_name": "News & Politics",
+      "observations": 35399,
+      "unique_videos": 22187,
+      "observed_views": 9807735391,
+      "engagement": 2.0649
+    },
+    {
+      "category_id": 26,
+      "category_name": "Howto & Style",
+      "observations": 18464,
+      "unique_videos": 9743,
+      "observed_views": 9631345897,
+      "engagement": 4.0843
+    },
+    {
+      "category_id": 28,
+      "category_name": "Science & Technology",
+      "observations": 8020,
+      "unique_videos": 3473,
+      "observed_views": 8942520015,
+      "engagement": 3.2303
+    },
+    {
+      "category_id": 20,
+      "category_name": "Gaming",
+      "observations": 10966,
+      "unique_videos": 5585,
+      "observed_views": 7523088633,
+      "engagement": 4.5411
+    },
+    {
+      "category_id": 27,
+      "category_name": "Education",
+      "observations": 7628,
+      "unique_videos": 4084,
+      "observed_views": 2703827718,
+      "engagement": 4.7818
+    },
+    {
+      "category_id": 15,
+      "category_name": "Pets & Animals",
+      "observations": 4488,
+      "unique_videos": 2328,
+      "observed_views": 1965151976,
+      "engagement": 3.2402
+    },
+    {
+      "category_id": 2,
+      "category_name": "Autos & Vehicles",
+      "observations": 4647,
+      "unique_videos": 3412,
+      "observed_views": 1645762506,
+      "engagement": 3.0953
+    },
+    {
+      "category_id": 29,
+      "category_name": "Nonprofits & Activism",
+      "observations": 2739,
+      "unique_videos": 1988,
+      "observed_views": 1216128051,
+      "engagement": 9.8816
+    },
+    {
+      "category_id": 19,
+      "category_name": "Travel & Events",
+      "observations": 1713,
+      "unique_videos": 847,
+      "observed_views": 719834908,
+      "engagement": 2.1696
+    }
   ]
 }
