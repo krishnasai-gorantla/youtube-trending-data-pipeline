@@ -1,0 +1,4 @@
+# Disabled on 2026-11-13 to prevent accidental AWS Athena queries.
+# To restore manual dashboard refreshes, move this file back to:
+# .github/workflows/refresh-dashboard-data.yml
+# The AWS EventBridge pipeline trigger is also disabled separately.
